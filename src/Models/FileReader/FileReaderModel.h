@@ -10,6 +10,11 @@ class FileReaderModel : public QObject {
     QML_ELEMENT
 public:
     FileReaderModel(QObject* parent = nullptr);
+
+    Q_INVOKABLE void openFile(const QString& path);
+
+private:
+    QString m_path;
 };
 
 }

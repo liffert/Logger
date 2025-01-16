@@ -6,7 +6,11 @@ Item {
 
     FileSelectionMenu {
         id: fileSelection
-        anchors.centerIn: root
+        anchors.fill: root
+
+        onFileAccepted: function(path) {
+            fileReaderModel.openFile(path);
+        }
     }
 
     FileReaderModel {
