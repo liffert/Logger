@@ -1,5 +1,6 @@
 #exclude build directory
 /build/*
+/src/build/*
 
 #exclude cmake configuration files
 CMakeLists.txt.user
