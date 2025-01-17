@@ -4,8 +4,8 @@ import Ui.MainView
 
 ApplicationWindow {
     id: root
-    width: 640
-    height: 480
+    width: 1800
+    height: 900
     visible: true
     title: qsTr("Logger Enhanced")
 

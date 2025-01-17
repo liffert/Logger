@@ -15,3 +15,8 @@ target_include_directories(Models
     PRIVATE
     FileReader/
 )
+
+target_link_libraries(Models
+    PRIVATE
+    Utility
+)
