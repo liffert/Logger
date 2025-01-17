@@ -20,10 +20,7 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
         m_model.insert(index, stream.readLine());
         index++;
     }
-
-    stream.seek(0);
-    m_text = stream.readAll();
-    emit textChanged();
+    m_file.close();
 }
 
 Utility::Models::ListModel<QString> *Models::FileReader::FileReaderModel::model()

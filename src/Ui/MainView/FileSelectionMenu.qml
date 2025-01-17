@@ -5,6 +5,7 @@ import QtCore
 
 Item {
     id: root
+    height: openFileButton.height
 
     signal fileAccepted(string path)
 
@@ -17,10 +18,17 @@ Item {
 
     Button {
         id: openFileButton
-        anchors.centerIn: root
+        anchors.top: root.top
+        anchors.left: root.left
         width: 200
-        height: 200
+        height: 100
         text: "Open file"
         onClicked: fileDialog.open()
+    }
+
+    Text {
+        anchors.right: root.right
+        anchors.verticalCenter: openFileButton.verticalCenter
+        text: "Opened file: %1".arg(fileDialog.selectedFile)
     }
 }

@@ -11,7 +11,6 @@ class FileReaderModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
 
-    Q_PROPERTY(QString text MEMBER m_text NOTIFY textChanged)
     Q_PROPERTY(Utility::Models::ListModel<QString> *model READ model() FINAL CONSTANT)
 
 public:
