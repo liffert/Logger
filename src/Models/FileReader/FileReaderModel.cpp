@@ -17,7 +17,9 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
 
     connect(this, &FileReaderModel::filterChanged, this, [this]() {
         qInfo() << "MYLOG filter changed " << m_filter;
-        m_refilter = true;
+        if (m_file.isOpen()) {
+            m_refilter = true;
+        }
     });
 }
 
@@ -34,8 +36,7 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
 {
     qInfo() << __PRETTY_FUNCTION__ << " " << path;
     if (m_file.isOpen()) {
-        qInfo() << "Return as not supported at the moment";
-        return;
+        releaseCurrentFile();
     }
 
     const auto localPath = QUrl(path).toLocalFile();
@@ -46,7 +47,7 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
     }
 
     m_stream.setDevice(&m_file);
-    m_model.reset();
+    tryToStartFromTheBeginning(true);
 
     m_thread = std::make_unique<std::jthread>([this](const std::stop_token& stopToken) {
         while (true && !stopToken.stop_requested()) {
@@ -95,9 +96,9 @@ Utility::Models::ListModel<Models::FileReader::FilteredLogLine>* Models::FileRea
     return &m_filteredModel;
 }
 
-void Models::FileReader::FileReaderModel::tryToStartFromTheBeginning()
+void Models::FileReader::FileReaderModel::tryToStartFromTheBeginning(bool force)
 {
-    if (m_file.size() < m_fileSize) {
+    if (force || m_file.size() < m_fileSize) {
         m_model.reset();
         m_filteredModel.reset();
         m_stream.seek(0);
@@ -107,7 +108,8 @@ void Models::FileReader::FileReaderModel::tryToStartFromTheBeginning()
 
 void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& item)
 {
-    if (item.text.contains(m_filter)) {
+    QRegularExpression regExp(m_filter, QRegularExpression::CaseInsensitiveOption);
+    if (item.text.contains(regExp)) {
         Models::FileReader::FilteredLogLine filteredItem;
         filteredItem.text = item.text;
         filteredItem.originalIndex = item.index;
@@ -115,4 +117,13 @@ void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& ite
         filteredItem.index = filteredModelIndex;
         m_filteredModel.insert(filteredModelIndex, filteredItem);
     }
+}
+
+void Models::FileReader::FileReaderModel::releaseCurrentFile()
+{
+    if (m_thread) {
+        m_thread->request_stop();
+    }
+    m_allowReading.notify_one();
+    m_fileWatcher.removePath(m_file.fileName());
 }

@@ -51,8 +51,9 @@ signals:
     void filterChanged();
 
 private:
-    void tryToStartFromTheBeginning();
+    void tryToStartFromTheBeginning(bool force = false);
     void pushToFilteredModel(const LogLine& item);
+    void releaseCurrentFile();
 
     QFile m_file;
     QTextStream m_stream;

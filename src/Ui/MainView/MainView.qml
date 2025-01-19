@@ -114,11 +114,11 @@ Item {
 
     Timer {
         running: true
-        interval: 5000
+        interval: 1000
         repeat: true
         onTriggered: {
             if (fileReaderModel.filter === "1") {
-                fileReaderModel.filter = "Some";
+                fileReaderModel.filter = "some";
             } else {
                 fileReaderModel.filter = "1";
             }
