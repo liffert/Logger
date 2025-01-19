@@ -1,5 +1,10 @@
-set(UTILITY_HEADERS )
-set(UTILITY_SOURCES )
+set(UTILITY_HEADERS
+    FileSystemWatcher.h
+)
+
+set(UTILITY_SOURCES
+    FileSystemWatcher.cpp
+)
 
 add_subdirectory(Models/)
 

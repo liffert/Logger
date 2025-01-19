@@ -4,6 +4,10 @@
 #include <QQmlEngine>
 #include <QFile>
 #include "Models/ListModel.h"
+#include "FileSystemWatcher.h"
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 namespace Models::FileReader {
 
@@ -15,18 +19,24 @@ class FileReaderModel : public QObject {
 
 public:
     FileReaderModel(QObject* parent = nullptr);
+    ~FileReaderModel();
 
     Q_INVOKABLE void openFile(const QString& path);
+
     Utility::Models::ListModel<QString>* model();
 
-signals:
-    void textChanged();
-
 private:
+    void tryToStartFromTheBeginning();
+
     QString m_path;
     QFile m_file;
-    QString m_text;
+    Utility::FileSystemWatcher& m_fileWatcher;
     Utility::Models::ListModel<QString> m_model;
+    QTextStream m_stream;
+    std::mutex m_fileMutex;
+    std::unique_ptr<std::jthread> m_thread;
+    std::condition_variable m_allowReading;
+    int m_fileSize = 0;
 };
 
 }
