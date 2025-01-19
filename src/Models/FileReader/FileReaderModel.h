@@ -54,7 +54,7 @@ signals:
     void filteredModelWidthChanged();
 
 private:
-    void tryToStartFromTheBeginning(bool force, Qt::ConnectionType invocationType);
+    void startFromTheBeginningIfNeeded(bool force, Qt::ConnectionType invocationType);
     void pushToModel(const QString& text);
     void pushToFilteredModel(const LogLine& item, int originalIndex);
     void releaseCurrentFile();
