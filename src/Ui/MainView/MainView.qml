@@ -51,7 +51,7 @@ Item {
                     anchors.verticalCenter: delegate.verticalCenter
                     anchors.left: delegate.left
                     anchors.leftMargin: 10
-                    text: delegate.modelData
+                    text: delegate.modelData.text
                     font.pixelSize: 14
                 }
 
@@ -93,7 +93,7 @@ Item {
                     anchors.verticalCenter: delegate2.verticalCenter
                     anchors.left: delegate2.left
                     anchors.leftMargin: 10
-                    text: delegate2.modelData
+                    text: delegate2.modelData.text
                     font.pixelSize: 14
                 }
 
@@ -110,5 +110,18 @@ Item {
     FileReaderModel {
         id: fileReaderModel
         filter: "Some"
+    }
+
+    Timer {
+        running: true
+        interval: 5000
+        repeat: true
+        onTriggered: {
+            if (fileReaderModel.filter === "1") {
+                fileReaderModel.filter = "Some";
+            } else {
+                fileReaderModel.filter = "1";
+            }
+        }
     }
 }

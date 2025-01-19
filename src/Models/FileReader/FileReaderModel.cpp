@@ -1,10 +1,10 @@
 #include "FileReaderModel.h"
+#include <QSortFilterProxyModel>
 
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
     m_fileWatcher(Utility::FileSystemWatcher::instance())
 {
-    qInfo() << __PRETTY_FUNCTION__;
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_file.fileName()) {
             if (m_fileMutex.try_lock()) {
@@ -13,6 +13,11 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
             }
             m_allowReading.notify_one();
         }
+    });
+
+    connect(this, &FileReaderModel::filterChanged, this, [this]() {
+        qInfo() << "MYLOG filter changed " << m_filter;
+        m_refilter = true;
     });
 }
 
@@ -47,32 +52,45 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
         while (true && !stopToken.stop_requested()) {
             std::unique_lock lock(m_fileMutex);
             m_allowReading.wait(lock, [this, &stopToken]() {
-                return !m_stream.atEnd() || stopToken.stop_requested();
+                return !m_stream.atEnd() || m_refilter || stopToken.stop_requested();
             });
 
-            while (!m_stream.atEnd() && !stopToken.stop_requested()) {
-                tryToStartFromTheBeginning();
+            while (!stopToken.stop_requested()) {
+                while (m_refilter && !stopToken.stop_requested()) {
+                    m_refilter = false;
+                    m_filteredModel.reset();
 
-                const auto line = m_stream.readLine();
-                if (!line.isEmpty()) {
-                    m_model.insert(m_model.rowCount(), line);
-                    if (line.contains(m_filter)) {
-                        m_filteredModel.insert(m_filteredModel.rowCount(), line);
+                    const auto& data = m_model.getRawData();
+                    for (const auto& item : data) {
+                        if (m_refilter || stopToken.stop_requested()) {
+                            break;
+                        }
+                        pushToFilteredModel(item);
                     }
                 }
 
-                m_fileSize = m_file.size();
+                if (!m_stream.atEnd()) {
+                    tryToStartFromTheBeginning();
+                    const auto line = m_stream.readLine();
+                    if (!line.isEmpty()) {
+                        const auto modelIndex = m_model.rowCount();
+                        Models::FileReader::LogLine modelItem({.index = modelIndex, .text = line});
+                        m_model.insert(modelIndex, modelItem);
+                        pushToFilteredModel(modelItem);
+                    }
+                    m_fileSize = m_file.size();
+                }
             }
         }
     });
 }
 
-Utility::Models::ListModel<QString>* Models::FileReader::FileReaderModel::model()
+Utility::Models::ListModel<Models::FileReader::LogLine>* Models::FileReader::FileReaderModel::model()
 {
     return &m_model;
 }
 
-Utility::Models::ListModel<QString>* Models::FileReader::FileReaderModel::filteredModel()
+Utility::Models::ListModel<Models::FileReader::FilteredLogLine>* Models::FileReader::FileReaderModel::filteredModel()
 {
     return &m_filteredModel;
 }
@@ -84,5 +102,17 @@ void Models::FileReader::FileReaderModel::tryToStartFromTheBeginning()
         m_filteredModel.reset();
         m_stream.seek(0);
         m_fileSize = m_file.size();
+    }
+}
+
+void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& item)
+{
+    if (item.text.contains(m_filter)) {
+        Models::FileReader::FilteredLogLine filteredItem;
+        filteredItem.text = item.text;
+        filteredItem.originalIndex = item.index;
+        const auto filteredModelIndex = m_filteredModel.rowCount();
+        filteredItem.index = filteredModelIndex;
+        m_filteredModel.insert(filteredModelIndex, filteredItem);
     }
 }
