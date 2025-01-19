@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import Models
@@ -20,11 +22,17 @@ Item {
     }
 
     ScrollView {
+        id: scrollView
         anchors.left: root.left
         anchors.right: root.right
         anchors.top: fileSelection.bottom
         anchors.topMargin: 20
-        anchors.bottom: root.bottom
+        anchors.bottom: scrollView2.top
+        anchors.bottomMargin: 50
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
+        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+        contentWidth: width * 2
+        contentHeight: list.contentHeight
         clip: true
 
         ListView {
@@ -32,15 +40,61 @@ Item {
             model: fileReaderModel.model
 
             delegate: Rectangle {
-                border.width: 2
-                border.color: "black"
-                width: list.width
+                id: delegate
+                width: Math.max(scrollView.contentWidth, textItem.width + textItem.anchors.leftMargin)
                 height: textItem.height + 10
+
+                required property var modelData
 
                 Text {
                     id: textItem
-                    anchors.centerIn: parent
-                    text: modelData
+                    anchors.verticalCenter: delegate.verticalCenter
+                    anchors.left: delegate.left
+                    anchors.leftMargin: 10
+                    text: delegate.modelData
+                    font.pixelSize: 14
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onPressed: {
+                        console.log("MYLOG");
+                    }
+                }
+            }
+        }
+    }
+
+    ScrollView {
+        id: scrollView2
+        anchors.left: root.left
+        anchors.right: root.right
+        anchors.bottom: root.bottom
+        height: 300
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
+        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+        contentWidth: width * 2
+        contentHeight: list2.contentHeight
+        clip: true
+
+        ListView {
+            id: list2
+            model: fileReaderModel.filteredModel
+
+            delegate: Rectangle {
+                id: delegate2
+                width: Math.max(scrollView2.contentWidth, textItem2.width + textItem2.anchors.leftMargin)
+                height: textItem2.height + 10
+
+                required property var modelData
+
+                Text {
+                    id: textItem2
+                    anchors.verticalCenter: delegate2.verticalCenter
+                    anchors.left: delegate2.left
+                    anchors.leftMargin: 10
+                    text: delegate2.modelData
+                    font.pixelSize: 14
                 }
 
                 MouseArea {
@@ -55,5 +109,6 @@ Item {
 
     FileReaderModel {
         id: fileReaderModel
+        filter: "Some"
     }
 }

@@ -6,7 +6,7 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
 {
     qInfo() << __PRETTY_FUNCTION__;
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
-        if (path == m_path) {
+        if (path == m_file.fileName()) {
             if (m_fileMutex.try_lock()) {
                 tryToStartFromTheBeginning();
                 m_fileMutex.unlock();
@@ -22,7 +22,7 @@ Models::FileReader::FileReaderModel::~FileReaderModel()
         m_thread->request_stop();
     }
     m_allowReading.notify_one();
-    m_fileWatcher.removePath(m_path);
+    m_fileWatcher.removePath(m_file.fileName());
 }
 
 void Models::FileReader::FileReaderModel::openFile(const QString &path)
@@ -33,11 +33,11 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
         return;
     }
 
-    m_path = QUrl(path).toLocalFile();
-    m_file.setFileName(m_path);
+    const auto localPath = QUrl(path).toLocalFile();
+    m_file.setFileName(localPath);
     m_file.open(QIODevice::ReadOnly);
     if (m_file.isOpen()) {
-        m_fileWatcher.addPath(m_path);
+        m_fileWatcher.addPath(localPath);
     }
 
     m_stream.setDevice(&m_file);
@@ -56,6 +56,9 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
                 const auto line = m_stream.readLine();
                 if (!line.isEmpty()) {
                     m_model.insert(m_model.rowCount(), line);
+                    if (line.contains(m_filter)) {
+                        m_filteredModel.insert(m_filteredModel.rowCount(), line);
+                    }
                 }
 
                 m_fileSize = m_file.size();
@@ -69,10 +72,16 @@ Utility::Models::ListModel<QString>* Models::FileReader::FileReaderModel::model(
     return &m_model;
 }
 
+Utility::Models::ListModel<QString>* Models::FileReader::FileReaderModel::filteredModel()
+{
+    return &m_filteredModel;
+}
+
 void Models::FileReader::FileReaderModel::tryToStartFromTheBeginning()
 {
     if (m_file.size() < m_fileSize) {
         m_model.reset();
+        m_filteredModel.reset();
         m_stream.seek(0);
         m_fileSize = m_file.size();
     }
