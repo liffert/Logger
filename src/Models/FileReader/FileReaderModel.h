@@ -55,13 +55,14 @@ signals:
 
 private:
     void tryToStartFromTheBeginning(bool force = false);
-    void pushToModel(const QString& text);
-    void pushToFilteredModel(const LogLine& item, int originalIndex);
+    Q_INVOKABLE void pushToModel(const QString& text);
+    Q_INVOKABLE void pushToFilteredModel(const LogLine& item, int originalIndex);
     void releaseCurrentFile();
     void setModelWidth(int value, bool onlyIfHigher = false);
     void setFilteredModelWidth(int value, bool onlyIfHigher = false);
     Q_INVOKABLE void resetModel();
     Q_INVOKABLE void resetFilteredModel();
+    Q_INVOKABLE QList<LogLine> getModelRawData();
 
     QFile m_file;
     QTextStream m_stream;

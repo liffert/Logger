@@ -1,5 +1,6 @@
 #include "FileReaderModel.h"
 #include <QRegularExpression>
+#include <chrono>
 
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
@@ -61,23 +62,21 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
             while (!stopToken.stop_requested()) {
                 while (m_refilter && !stopToken.stop_requested()) {
                     m_refilter = false;
-                    //resetFilteredModel();
                     QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
 
-                    //NOT THREAD SAFE, NEEDS FIXING.
-                    const auto& data = m_model.getRawData();
+                    QList<LogLine> data;
+                    QMetaObject::invokeMethod(this, &FileReaderModel::getModelRawData, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
+
                     for (int i = 0; i < data.size(); i++) {
                         if (m_refilter || stopToken.stop_requested()) {
                             break;
                         }
-                        //pushToFilteredModel(data.at(i), i);
                         QMetaObject::invokeMethod(this, &FileReaderModel::pushToFilteredModel, Qt::QueuedConnection, data.at(i), i);
                     }
                 }
 
                 if (!m_stream.atEnd()) {
                     tryToStartFromTheBeginning();
-                    //pushToModel(m_stream.readLine());
                     QMetaObject::invokeMethod(this, &FileReaderModel::pushToModel, Qt::QueuedConnection, m_stream.readLine());
                     m_fileSize = m_file.size();
                 }
@@ -99,8 +98,6 @@ Utility::Models::ListModel<Models::FileReader::FilteredLogLine>* Models::FileRea
 void Models::FileReader::FileReaderModel::tryToStartFromTheBeginning(bool force)
 {
     if (force || m_file.size() < m_fileSize) {
-        //resetModel();
-        //resetFilteredModel();
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         m_stream.seek(0);
@@ -165,4 +162,9 @@ void Models::FileReader::FileReaderModel::resetFilteredModel()
 {
     m_filteredModel.reset();
     setFilteredModelWidth(0);
+}
+
+QList<Models::FileReader::LogLine> Models::FileReader::FileReaderModel::getModelRawData()
+{
+    return m_model.getRawData();
 }
