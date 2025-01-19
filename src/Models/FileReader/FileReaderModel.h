@@ -15,11 +15,9 @@ namespace Models::FileReader {
 
 struct LogLine {
     Q_GADGET
-    Q_PROPERTY(int index MEMBER index FINAL CONSTANT)
     Q_PROPERTY(QString text MEMBER text FINAL CONSTANT)
 
 public:
-    int index;
     QString text;
 };
 
@@ -58,12 +56,12 @@ signals:
 private:
     void tryToStartFromTheBeginning(bool force = false);
     void pushToModel(const QString& text);
-    void pushToFilteredModel(const LogLine& item);
+    void pushToFilteredModel(const LogLine& item, int originalIndex);
     void releaseCurrentFile();
     void setModelWidth(int value, bool onlyIfHigher = false);
     void setFilteredModelWidth(int value, bool onlyIfHigher = false);
-    void resetModel();
-    void resetFilteredModel();
+    Q_INVOKABLE void resetModel();
+    Q_INVOKABLE void resetFilteredModel();
 
     QFile m_file;
     QTextStream m_stream;

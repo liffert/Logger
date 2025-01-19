@@ -50,6 +50,7 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
     m_stream.setDevice(&m_file);
     tryToStartFromTheBeginning(true);
 
+    //Check if maybe should be moved to QThread to make sure that signal emitting is properly done
     m_thread = std::make_unique<std::jthread>([this](const std::stop_token& stopToken) {
         while (true && !stopToken.stop_requested()) {
             std::unique_lock lock(m_fileMutex);
@@ -60,20 +61,24 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
             while (!stopToken.stop_requested()) {
                 while (m_refilter && !stopToken.stop_requested()) {
                     m_refilter = false;
-                    resetFilteredModel();
+                    //resetFilteredModel();
+                    QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
 
+                    //NOT THREAD SAFE, NEEDS FIXING.
                     const auto& data = m_model.getRawData();
-                    for (const auto& item : data) {
+                    for (int i = 0; i < data.size(); i++) {
                         if (m_refilter || stopToken.stop_requested()) {
                             break;
                         }
-                        pushToFilteredModel(item);
+                        //pushToFilteredModel(data.at(i), i);
+                        QMetaObject::invokeMethod(this, &FileReaderModel::pushToFilteredModel, Qt::QueuedConnection, data.at(i), i);
                     }
                 }
 
                 if (!m_stream.atEnd()) {
                     tryToStartFromTheBeginning();
-                    pushToModel(m_stream.readLine());
+                    //pushToModel(m_stream.readLine());
+                    QMetaObject::invokeMethod(this, &FileReaderModel::pushToModel, Qt::QueuedConnection, m_stream.readLine());
                     m_fileSize = m_file.size();
                 }
             }
@@ -94,8 +99,10 @@ Utility::Models::ListModel<Models::FileReader::FilteredLogLine>* Models::FileRea
 void Models::FileReader::FileReaderModel::tryToStartFromTheBeginning(bool force)
 {
     if (force || m_file.size() < m_fileSize) {
-        resetModel();
-        resetFilteredModel();
+        //resetModel();
+        //resetFilteredModel();
+        QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         m_stream.seek(0);
         m_fileSize = m_file.size();
     }
@@ -105,24 +112,20 @@ void Models::FileReader::FileReaderModel::pushToModel(const QString& text)
 {
     if (!text.isEmpty()) {
         const auto modelIndex = m_model.rowCount();
-        Models::FileReader::LogLine modelItem({.index = modelIndex, .text = text});
+        Models::FileReader::LogLine modelItem({.text = text});
         m_model.insert(modelIndex, modelItem);
         setModelWidth(m_fontMetrics.horizontalAdvance(text), true);
-        pushToFilteredModel(modelItem);
+        pushToFilteredModel(modelItem, modelIndex);
     }
 }
 
-void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& item)
+void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& item, int originalIndex)
 {
     QRegularExpression regExp(m_filter, QRegularExpression::CaseInsensitiveOption);
     const auto text = item.text;
     if (text.contains(regExp)) {
-        Models::FileReader::FilteredLogLine filteredItem;
-        filteredItem.text = text;
-        filteredItem.originalIndex = item.index;
         const auto filteredModelIndex = m_filteredModel.rowCount();
-        filteredItem.index = filteredModelIndex;
-        m_filteredModel.insert(filteredModelIndex, filteredItem);
+        m_filteredModel.insert(filteredModelIndex, {text, originalIndex});
         setFilteredModelWidth(m_fontMetrics.horizontalAdvance(text), true);
     }
 }
