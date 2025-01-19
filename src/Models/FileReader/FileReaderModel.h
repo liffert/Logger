@@ -54,15 +54,15 @@ signals:
     void filteredModelWidthChanged();
 
 private:
-    void tryToStartFromTheBeginning(bool force = false);
-    Q_INVOKABLE void pushToModel(const QString& text);
-    Q_INVOKABLE void pushToFilteredModel(const LogLine& item, int originalIndex);
+    void tryToStartFromTheBeginning(bool force, Qt::ConnectionType invocationType);
+    void pushToModel(const QString& text);
+    void pushToFilteredModel(const LogLine& item, int originalIndex);
     void releaseCurrentFile();
     void setModelWidth(int value, bool onlyIfHigher = false);
     void setFilteredModelWidth(int value, bool onlyIfHigher = false);
-    Q_INVOKABLE void resetModel();
-    Q_INVOKABLE void resetFilteredModel();
-    Q_INVOKABLE QList<LogLine> getModelRawData();
+    void resetModel();
+    void resetFilteredModel();
+    QList<LogLine> getModelRawData();
 
     QFile m_file;
     QTextStream m_stream;
@@ -78,7 +78,7 @@ private:
     std::mutex m_fileMutex;
     std::unique_ptr<std::jthread> m_thread;
     std::condition_variable m_allowReading;
-    std::atomic<bool> m_refilter;
+    std::atomic<bool> m_refilter = false;
 
     int m_fileSize = 0;
 };
