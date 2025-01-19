@@ -1,9 +1,10 @@
 #include "FileReaderModel.h"
-#include <QSortFilterProxyModel>
+#include <QRegularExpression>
 
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
-    m_fileWatcher(Utility::FileSystemWatcher::instance())
+    m_fileWatcher(Utility::FileSystemWatcher::instance()),
+    m_fontMetrics({})
 {
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_file.fileName()) {
@@ -59,7 +60,7 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
             while (!stopToken.stop_requested()) {
                 while (m_refilter && !stopToken.stop_requested()) {
                     m_refilter = false;
-                    m_filteredModel.reset();
+                    resetFilteredModel();
 
                     const auto& data = m_model.getRawData();
                     for (const auto& item : data) {
@@ -72,13 +73,7 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
 
                 if (!m_stream.atEnd()) {
                     tryToStartFromTheBeginning();
-                    const auto line = m_stream.readLine();
-                    if (!line.isEmpty()) {
-                        const auto modelIndex = m_model.rowCount();
-                        Models::FileReader::LogLine modelItem({.index = modelIndex, .text = line});
-                        m_model.insert(modelIndex, modelItem);
-                        pushToFilteredModel(modelItem);
-                    }
+                    pushToModel(m_stream.readLine());
                     m_fileSize = m_file.size();
                 }
             }
@@ -99,23 +94,36 @@ Utility::Models::ListModel<Models::FileReader::FilteredLogLine>* Models::FileRea
 void Models::FileReader::FileReaderModel::tryToStartFromTheBeginning(bool force)
 {
     if (force || m_file.size() < m_fileSize) {
-        m_model.reset();
-        m_filteredModel.reset();
+        resetModel();
+        resetFilteredModel();
         m_stream.seek(0);
         m_fileSize = m_file.size();
+    }
+}
+
+void Models::FileReader::FileReaderModel::pushToModel(const QString& text)
+{
+    if (!text.isEmpty()) {
+        const auto modelIndex = m_model.rowCount();
+        Models::FileReader::LogLine modelItem({.index = modelIndex, .text = text});
+        m_model.insert(modelIndex, modelItem);
+        setModelWidth(m_fontMetrics.horizontalAdvance(text), true);
+        pushToFilteredModel(modelItem);
     }
 }
 
 void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& item)
 {
     QRegularExpression regExp(m_filter, QRegularExpression::CaseInsensitiveOption);
-    if (item.text.contains(regExp)) {
+    const auto text = item.text;
+    if (text.contains(regExp)) {
         Models::FileReader::FilteredLogLine filteredItem;
-        filteredItem.text = item.text;
+        filteredItem.text = text;
         filteredItem.originalIndex = item.index;
         const auto filteredModelIndex = m_filteredModel.rowCount();
         filteredItem.index = filteredModelIndex;
         m_filteredModel.insert(filteredModelIndex, filteredItem);
+        setFilteredModelWidth(m_fontMetrics.horizontalAdvance(text), true);
     }
 }
 
@@ -126,4 +134,32 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
     }
     m_allowReading.notify_one();
     m_fileWatcher.removePath(m_file.fileName());
+}
+
+void Models::FileReader::FileReaderModel::setModelWidth(int value, bool onlyIfHigher)
+{
+    if (m_modelWidth != value && (!onlyIfHigher || m_modelWidth < value)) {
+        m_modelWidth = value;
+        emit modelWidthChanged();
+    }
+}
+
+void Models::FileReader::FileReaderModel::setFilteredModelWidth(int value, bool onlyIfHigher)
+{
+    if (m_filteredModelWidth != value && (!onlyIfHigher || m_filteredModelWidth < value)) {
+        m_filteredModelWidth = value;
+        emit filteredModelWidthChanged();
+    }
+}
+
+void Models::FileReader::FileReaderModel::resetModel()
+{
+    m_model.reset();;
+    setModelWidth(0);
+}
+
+void Models::FileReader::FileReaderModel::resetFilteredModel()
+{
+    m_filteredModel.reset();
+    setFilteredModelWidth(0);
 }

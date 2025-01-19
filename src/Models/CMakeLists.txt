@@ -19,4 +19,5 @@ target_include_directories(Models
 target_link_libraries(Models
     PRIVATE
     Utility
+    Qt6::Gui
 )

@@ -31,7 +31,7 @@ Item {
         anchors.bottomMargin: 50
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
         ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-        contentWidth: width * 2
+        contentWidth: Math.max(fileReaderModel.modelWidth + 10, scrollView.width)
         contentHeight: list.contentHeight
         clip: true
 
@@ -41,7 +41,7 @@ Item {
 
             delegate: Rectangle {
                 id: delegate
-                width: Math.max(scrollView.contentWidth, textItem.width + textItem.anchors.leftMargin)
+                width: scrollView.contentWidth
                 height: textItem.height + 10
 
                 required property var modelData
@@ -52,7 +52,7 @@ Item {
                     anchors.left: delegate.left
                     anchors.leftMargin: 10
                     text: delegate.modelData.text
-                    font.pixelSize: 14
+                    //font.pixelSize: 14
                 }
 
                 MouseArea {
@@ -73,7 +73,7 @@ Item {
         height: 300
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
         ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-        contentWidth: width * 2
+        contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, scrollView.width)
         contentHeight: list2.contentHeight
         clip: true
 
@@ -83,7 +83,7 @@ Item {
 
             delegate: Rectangle {
                 id: delegate2
-                width: Math.max(scrollView2.contentWidth, textItem2.width + textItem2.anchors.leftMargin)
+                width: scrollView2.contentWidth
                 height: textItem2.height + 10
 
                 required property var modelData
@@ -94,7 +94,7 @@ Item {
                     anchors.left: delegate2.left
                     anchors.leftMargin: 10
                     text: delegate2.modelData.text
-                    font.pixelSize: 14
+                    //font.pixelSize: 14
                 }
 
                 MouseArea {
@@ -107,21 +107,39 @@ Item {
         }
     }
 
-    FileReaderModel {
-        id: fileReaderModel
-        filter: "Some"
+
+    Rectangle {
+        color: "white"
+        anchors.left: root.left
+        anchors.right: root.right
+        anchors.top: scrollView.bottom
+        height: filterText.height
     }
 
-    Timer {
-        running: true
-        interval: 1000
-        repeat: true
-        onTriggered: {
-            if (fileReaderModel.filter === "1") {
-                fileReaderModel.filter = "some";
-            } else {
-                fileReaderModel.filter = "1";
-            }
+    Text {
+        id: filterText
+        text: "CurrentFilter: "
+        anchors.left: root.left
+        anchors.top: filter.top
+    }
+
+    TextEdit {
+        id: filter
+        anchors.left: filterText.right
+        anchors.right: root.right
+        anchors.top: scrollView.bottom
+        height: filterText.height
+    }
+
+    FileReaderModel {
+        id: fileReaderModel
+        filter: filter.text
+
+        onModelWidthChanged: {
+            console.log("Model: ", modelWidth);
+        }
+        onFilteredModelWidthChanged: {
+            console.log(filteredModelWidth);
         }
     }
 }
