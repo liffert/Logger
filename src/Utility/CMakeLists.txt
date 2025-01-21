@@ -8,10 +8,13 @@ set(UTILITY_SOURCES
 
 add_subdirectory(Models/)
 
-qt_add_library(Utility
-    STATIC
-    ${UTILITY_HEADERS}
-    ${UTILITY_SOURCES}
+qt_add_library(Utility STATIC)
+qt_add_qml_module(Utility
+    URI Utility
+    VERSION 1.0
+    SOURCES
+        ${UTILITY_HEADERS}
+        ${UTILITY_SOURCES}
 )
 
 target_link_libraries(Utility

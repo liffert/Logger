@@ -43,7 +43,7 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
     m_file.setFileName(localPath);
     m_file.open(QIODevice::ReadOnly);
     if (m_file.isOpen()) {
-        m_fileWatcher.addPath(localPath);
+        m_fileWatcher.addFilePath(localPath);
     }
 
     m_stream.setDevice(&m_file);
@@ -121,8 +121,7 @@ void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& ite
     QRegularExpression regExp(m_filter, QRegularExpression::CaseInsensitiveOption);
     const auto text = item.text;
     if (text.contains(regExp)) {
-        const auto filteredModelIndex = m_filteredModel.rowCount();
-        m_filteredModel.insert(filteredModelIndex, {text, originalIndex});
+        m_filteredModel.pushBack({text, originalIndex});
         setFilteredModelWidth(m_fontMetrics.horizontalAdvance(text), true);
     }
 }
@@ -133,7 +132,7 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
         m_thread->request_stop();
     }
     m_allowReading.notify_one();
-    m_fileWatcher.removePath(m_file.fileName());
+    m_fileWatcher.removeFilePath(m_file.fileName());
     m_file.close();
 }
 

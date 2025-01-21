@@ -41,6 +41,7 @@ target_link_libraries(appLoggerEnhanced
     Qt6::Quick
     Ui_MainViewplugin
     Modelsplugin
+    Utilityplugin
 )
 
 include(GNUInstallDirs)

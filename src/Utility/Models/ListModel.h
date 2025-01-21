@@ -16,6 +16,9 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     void insert(int index, const DataType& data);
+    void pushBack(const DataType& data);
+    void remove(int index);
+    void remove(const DataType& data);
     void reset();
     const QList<DataType>& getRawData();
 
@@ -76,6 +79,33 @@ inline void ListModel<DataType>::insert(int index, const DataType& data)
     emit beginInsertRows({}, index, index);
     m_data.insert(index, data);
     emit endInsertRows();
+}
+
+template<typename DataType>
+inline void ListModel<DataType>::pushBack(const DataType& data)
+{
+    insert(rowCount(), data);
+}
+
+template<typename DataType>
+inline void ListModel<DataType>::remove(int index)
+{
+    if (index < 0 || index >= m_data.size()) {
+        qWarning() << __PRETTY_FUNCTION__ << " incorrect index provided: " << index;
+        return;
+    }
+    emit beginRemoveRows({}, index, index);
+    m_data.remove(index);
+    emit endRemoveRows();
+}
+
+template<typename DataType>
+inline void ListModel<DataType>::remove(const DataType& data)
+{
+    const auto itemIndex = m_data.indexOf(data);
+    if (itemIndex != -1) {
+        remove(itemIndex);
+    }
 }
 
 template<typename DataType>

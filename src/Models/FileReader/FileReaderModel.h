@@ -33,8 +33,8 @@ class FileReaderModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
 
-    Q_PROPERTY(Utility::Models::ListModel<LogLine> *model READ model() FINAL CONSTANT)
-    Q_PROPERTY(Utility::Models::ListModel<FilteredLogLine> *filteredModel READ filteredModel() FINAL CONSTANT)
+    Q_PROPERTY(Utility::Models::ListModel<LogLine> *model READ model() CONSTANT)
+    Q_PROPERTY(Utility::Models::ListModel<FilteredLogLine> *filteredModel READ filteredModel() CONSTANT)
     Q_PROPERTY(QString filter MEMBER m_filter NOTIFY filterChanged)
     Q_PROPERTY(int modelWidth MEMBER m_modelWidth NOTIFY modelWidthChanged)
     Q_PROPERTY(int filteredModelWidth MEMBER m_filteredModelWidth NOTIFY filteredModelWidthChanged)

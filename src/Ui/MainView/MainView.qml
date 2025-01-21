@@ -3,13 +3,41 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import Models
+import Utility
 
 Item {
     id: root
 
+    TabBar {
+        id: tabBar
+        anchors.left: root.left
+        anchors.top: root.top
+        width: Math.min(tabBar.contentWidth, root.width)
+
+        Repeater {
+            id: openedFilesRepeater
+            model: FileSystemWatcher.openedFilesModel
+            delegate: TabButton {
+                id: openedFilesDelegate
+
+                required property var modelData
+
+                width: openedFilesDelegate.implicitWidth
+                text: openedFilesDelegate.modelData
+            }
+        }
+
+        TabButton {
+            id: openFile
+            text: "open file"
+
+            onClicked: fileSelection.open()
+        }
+    }
+
     FileSelectionMenu {
         id: fileSelection
-        anchors.top: root.top
+        anchors.top: tabBar.bottom
         anchors.left: root.left
         anchors.right: root.right
         anchors.rightMargin: 20
@@ -134,12 +162,5 @@ Item {
     FileReaderModel {
         id: fileReaderModel
         filter: filter.text
-
-        onModelWidthChanged: {
-            console.log("Model: ", modelWidth);
-        }
-        onFilteredModelWidthChanged: {
-            console.log(filteredModelWidth);
-        }
     }
 }

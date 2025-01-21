@@ -7,6 +7,10 @@ Item {
     id: root
     height: openFileButton.height
 
+    function open() {
+        fileDialog.open();
+    }
+
     signal fileAccepted(string path)
 
     FileDialog  {

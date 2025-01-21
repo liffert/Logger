@@ -11,9 +11,10 @@ qt_add_qml_module(Models
         ${MODELS_HEADERS}
         ${MODELS_SOURCES}
 )
+
 target_include_directories(Models
     PRIVATE
-    FileReader/
+        FileReader/
 )
 
 target_link_libraries(Models
