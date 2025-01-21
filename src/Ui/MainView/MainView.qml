@@ -2,6 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
+import QtCore
 import Models
 import Utility
 import Ui.Components
@@ -32,21 +34,7 @@ Item {
             id: openFile
             text: "open file"
 
-            onClicked: fileSelection.open()
-        }
-    }
-
-    FileSelectionMenu {
-        id: fileSelection
-        anchors.top: tabBar.bottom
-        anchors.left: root.left
-        anchors.right: root.right
-        anchors.rightMargin: 20
-        anchors.leftMargin: 20
-        anchors.topMargin: 20
-
-        onFileAccepted: function(path) {
-            fileReaderModel.openFile(path);
+            onClicked: fileDialog.open()
         }
     }
 
@@ -54,7 +42,7 @@ Item {
         id: scrollView
         anchors.left: root.left
         anchors.right: root.right
-        anchors.top: fileSelection.bottom
+        anchors.top: tabBar.bottom
         anchors.topMargin: 20
         anchors.bottom: scrollView2.top
         anchors.bottomMargin: 50
@@ -95,6 +83,22 @@ Item {
         anchors.right: root.right
         anchors.top: scrollView.bottom
         height: filterText.height
+    }
+
+    Loader {
+        anchors.fill: root
+        active: FileSystemWatcher.openedFilesModel.rowCount === 0//fix
+        sourceComponent: NoFileOpenedView {
+            id: noFileOpened
+            anchors.fill: parent
+        }
+    }
+
+    FileDialog  {
+        id: fileDialog
+        currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        fileMode: FileDialog.OpenFile
+        onAccepted: fileReaderModel.openFile(fileDialog.selectedFile)
     }
 
     FileReaderModel {

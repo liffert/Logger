@@ -4,5 +4,5 @@ qt_add_qml_module(Ui_MainView
     VERSION 1.0
     QML_FILES
         MainView.qml
-        FileSelectionMenu.qml
+        NoFileOpenedView.qml
 )
