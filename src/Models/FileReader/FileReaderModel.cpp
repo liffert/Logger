@@ -1,5 +1,7 @@
 #include "FileReaderModel.h"
 #include <QRegularExpression>
+#include <QGuiApplication>
+#include <QClipboard>
 
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
@@ -63,7 +65,9 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
 
                     QList<LogLine> data;
                     //Block to retreive full data
-                    QMetaObject::invokeMethod(this, &FileReaderModel::getModelRawData, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
+                    QMetaObject::invokeMethod(this, [this]() {
+                        return m_model.getRawData();
+                    }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
 
                     for (int i = 0; i < data.size(); i++) {
                         if (m_refilter || stopToken.stop_requested()) {
@@ -83,6 +87,26 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
             }
         }
     });
+}
+
+void Models::FileReader::FileReaderModel::selectItem(int index, bool exclusive)
+{
+    m_model.updateSelection(index, exclusive);
+}
+
+void Models::FileReader::FileReaderModel::selectFilteredItem(int index, bool exclusive)
+{
+    m_filteredModel.updateSelection(index, exclusive);
+}
+
+void Models::FileReader::FileReaderModel::copyToClipboardSelectedItems()
+{
+    copyToClipBoard(m_model);
+}
+
+void Models::FileReader::FileReaderModel::copyToClipboardSelectedFilteredItems()
+{
+    copyToClipBoard(m_filteredModel);
 }
 
 Utility::Models::ListModel<Models::FileReader::LogLine>* Models::FileReader::FileReaderModel::model()
@@ -121,7 +145,7 @@ void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& ite
     QRegularExpression regExp(m_filter, QRegularExpression::CaseInsensitiveOption);
     const auto text = item.text;
     if (text.contains(regExp)) {
-        m_filteredModel.pushBack({text, originalIndex});
+        m_filteredModel.pushBack({text, false, originalIndex});
         setFilteredModelWidth(m_fontMetrics.horizontalAdvance(text), true);
     }
 }
@@ -164,7 +188,23 @@ void Models::FileReader::FileReaderModel::resetFilteredModel()
     setFilteredModelWidth(0);
 }
 
-QList<Models::FileReader::LogLine> Models::FileReader::FileReaderModel::getModelRawData()
+template<typename DataType>
+void Models::FileReader::FileReaderModel::copyToClipBoard(const Utility::Models::ListModel<DataType>& model) const
 {
-    return m_model.getRawData();
+    qInfo() << __PRETTY_FUNCTION__ << " 1";
+    const auto& selection = model.getSelection();
+    if (selection.empty()) {
+        return;
+    }
+    qInfo() << __PRETTY_FUNCTION__ << " 2";
+
+    const auto& data = model.getRawData();
+    QStringList selectedItems;
+    for (const auto& index : selection) {
+        selectedItems << data.at(index).text;
+    }
+    qInfo() << __PRETTY_FUNCTION__ << " 3 " << selectedItems.join("\n");
+
+    auto* clipboard = QGuiApplication::clipboard();
+    clipboard->setText(selectedItems.join("\n"));
 }

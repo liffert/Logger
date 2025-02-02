@@ -16,9 +16,11 @@ namespace Models::FileReader {
 struct LogLine {
     Q_GADGET
     Q_PROPERTY(QString text MEMBER text FINAL CONSTANT)
+    Q_PROPERTY(bool selected MEMBER selected FINAL CONSTANT)
 
 public:
     QString text;
+    bool selected = false;
 };
 
 struct FilteredLogLine : public LogLine {
@@ -44,6 +46,10 @@ public:
     ~FileReaderModel();
 
     Q_INVOKABLE void openFile(const QString& path);
+    Q_INVOKABLE void selectItem(int index, bool exclusive);
+    Q_INVOKABLE void selectFilteredItem(int index, bool exclusive);
+    Q_INVOKABLE void copyToClipboardSelectedItems();
+    Q_INVOKABLE void copyToClipboardSelectedFilteredItems();
 
     Utility::Models::ListModel<LogLine>* model();
     Utility::Models::ListModel<FilteredLogLine>* filteredModel();
@@ -62,7 +68,8 @@ private:
     void setFilteredModelWidth(int value, bool onlyIfHigher = false);
     void resetModel();
     void resetFilteredModel();
-    QList<LogLine> getModelRawData();
+    template<typename DataType>
+    void copyToClipBoard(const Utility::Models::ListModel<DataType>& model) const;
 
     QFile m_file;
     QTextStream m_stream;

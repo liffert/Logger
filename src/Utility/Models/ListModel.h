@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <set>
 
 namespace Utility::Models {
 
@@ -16,11 +17,15 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     void insert(int index, const DataType& data);
+    void update(int index, const DataType& data);
     void pushBack(const DataType& data);
     void remove(int index);
     void remove(const DataType& data);
     void reset();
-    const QList<DataType>& getRawData();
+    void updateSelection(int index, bool exclusive);
+    void resetSelection();
+    const QList<DataType>& getRawData() const;
+    const std::set<int>& getSelection() const;
 
     // void move(int from, int to)
     // {
@@ -35,6 +40,7 @@ public:
 
 private:
     QList<DataType> m_data;
+    std::set<int> m_selectionHelper;
 };
 
 
@@ -82,6 +88,18 @@ inline void ListModel<DataType>::insert(int index, const DataType& data)
 }
 
 template<typename DataType>
+inline void ListModel<DataType>::update(int index, const DataType& data)
+{
+    if (index < 0 || index > m_data.size()) {
+        qWarning() << __PRETTY_FUNCTION__ << " incorrect index provided: " << index;
+        return;
+    }
+    m_data[index] = data;
+    const auto modelIndex = ListModel::index(index);
+    emit dataChanged(modelIndex, modelIndex);
+}
+
+template<typename DataType>
 inline void ListModel<DataType>::pushBack(const DataType& data)
 {
     insert(rowCount(), data);
@@ -113,13 +131,58 @@ inline void ListModel<DataType>::reset()
 {
     emit beginResetModel();
     m_data.clear();
+    m_selectionHelper.clear();
     emit endResetModel();
 }
 
 template<typename DataType>
-inline const QList<DataType>& ListModel<DataType>::getRawData()
+inline void ListModel<DataType>::updateSelection(int index, bool exclusive)
+{
+    if (index < 0 || index >= m_data.size()) {
+        qWarning() << __PRETTY_FUNCTION__ << " index is out of bounds: " << index;
+        return;
+    }
+
+    if (exclusive) {
+        resetSelection();
+    }
+
+    auto item = m_data.at(index);
+    item.selected = !item.selected;
+    if (item.selected) {
+        m_selectionHelper.insert(index);
+    } else {
+        m_selectionHelper.erase(index);
+    }
+
+    update(index, item);
+}
+
+template<typename DataType>
+inline void ListModel<DataType>::resetSelection()
+{
+    for (const auto& selectedIndex : m_selectionHelper) {
+        if (selectedIndex >= 0 && selectedIndex < m_data.size()) {
+            auto item = m_data.at(selectedIndex);
+            if (item.selected) {
+                item.selected = false;
+                update(selectedIndex, item);
+            }
+        }
+    }
+    m_selectionHelper.clear();
+}
+
+template<typename DataType>
+inline const QList<DataType>& ListModel<DataType>::getRawData() const
 {
     return m_data;
+}
+
+template<typename DataType>
+inline const std::set<int> &ListModel<DataType>::getSelection() const
+{
+    return m_selectionHelper;
 }
 
 }

@@ -15,7 +15,7 @@ Item {
         id: tabBar
         anchors.left: root.left
         anchors.top: root.top
-        width: Math.min(tabBar.contentWidth, root.width)
+        width: Math.min(tabBar.contentWidth, root.width - openFile.width)
 
         Repeater {
             id: openedFilesRepeater
@@ -29,13 +29,16 @@ Item {
                 text: openedFilesDelegate.modelData
             }
         }
+    }
 
-        TabButton {
-            id: openFile
-            text: "open file"
+    Button {
+        id: openFile
+        anchors.top: tabBar.top
+        anchors.left: tabBar.right
+        anchors.bottom: tabBar.bottom
+        text: "open file"
 
-            onClicked: fileDialog.open()
-        }
+        onClicked: fileDialog.open()
     }
 
     TextView {
@@ -48,6 +51,12 @@ Item {
         anchors.bottomMargin: 50
         contentWidth: Math.max(fileReaderModel.modelWidth + 10, scrollView.width)
         model: fileReaderModel.model
+
+        onItemSelected: function(index, exclusive) {
+            fileReaderModel.selectItem(index, exclusive);
+            internal.lastTextViewSelection = this;
+        }
+        onCopySelection: fileReaderModel.copyToClipboardSelectedItems()
     }
 
     TextView {
@@ -59,6 +68,13 @@ Item {
         contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, scrollView.width)
         clip: true
         model: fileReaderModel.filteredModel
+
+        onItemSelected: function(index, exclusive) {
+            fileReaderModel.selectFilteredItem(index, exclusive);
+            internal.lastTextViewSelection = this;
+        }
+
+        onCopySelection: fileReaderModel.copyToClipboardSelectedFilteredItems()
     }
 
 
@@ -101,8 +117,24 @@ Item {
         onAccepted: fileReaderModel.openFile(fileDialog.selectedFile)
     }
 
+    Shortcut {
+        context: Qt.ApplicationShortcut
+        sequences: [StandardKey.Copy]
+        onActivated: {
+            if (Boolean(internal.lastTextViewSelection)) {
+                internal.lastTextViewSelection.copySelection();
+            }
+        }
+    }
+
     FileReaderModel {
         id: fileReaderModel
         filter: filter.text
+    }
+
+    QtObject {
+        id: internal
+
+        property var lastTextViewSelection: null
     }
 }

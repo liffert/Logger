@@ -7,6 +7,8 @@ ScrollView {
     id: root
 
     property alias model: listView.model
+    signal itemSelected(int index, bool exclusive)
+    signal copySelection()
 
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
     ScrollBar.vertical.policy: ScrollBar.AlwaysOn
@@ -18,10 +20,12 @@ ScrollView {
 
         delegate: Rectangle {
             id: delegate
-            width: root.contentWidth
-            height: textItem.height + 10
 
             required property var modelData
+            required property int index
+
+            width: root.contentWidth
+            height: textItem.height + 10
 
             Text {
                 id: textItem
@@ -32,11 +36,26 @@ ScrollView {
             }
 
             MouseArea {
-                anchors.fill: parent
-                onPressed: {
-                    console.log("MYLOG");
+                id: mouseArea
+                anchors.fill: delegate
+                propagateComposedEvents: true
+                onPressed: function(mouse) {
+                    listView.forceActiveFocus();
+                    root.itemSelected(delegate.index, mouse.modifiers ^ Qt.ControlModifier);
+                    console.log("PREESSED");
                 }
             }
+
+            states: [
+                State {
+                    name: "selected"
+                    when: modelData.selected
+                    PropertyChanges {
+                        delegate.color: "blue"
+                        textItem.color: "white"
+                    }
+                }
+            ]
         }
     }
 }
