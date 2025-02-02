@@ -68,6 +68,7 @@ Item {
         contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, scrollView.width)
         clip: true
         model: fileReaderModel.filteredModel
+        enableScrollToItemRecognition: true
 
         onItemSelected: function(index, exclusive) {
             fileReaderModel.selectFilteredItem(index, exclusive);
@@ -75,6 +76,9 @@ Item {
         }
 
         onCopySelection: fileReaderModel.copyToClipboardSelectedFilteredItems()
+        onScrollToItem: function(index) {
+            scrollView.highlightItem(index);
+        }
     }
 
 
