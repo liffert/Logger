@@ -103,7 +103,7 @@ Item {
         }
 
         onItemDoubleClicked: function(item, exclusive) {
-            fileReaderModel.updateFilteredItemSelection(item.lineIndex, true, true);
+            fileReaderModel.updateFilteredItemSelection(item.lineIndex, exclusive, true);
             fileReaderModel.updateItemSelection(item.lineIndex, true, true);
             scrollView.view.positionViewAtIndex(item.lineIndex, ListView.Center);
         }

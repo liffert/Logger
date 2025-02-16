@@ -52,8 +52,6 @@ Item {
                 if (Boolean(itemUnderMouse)) {
                     const itemUnderMouseIndex = itemUnderMouse.index;
                     if (mouseArea.lastMultiselectionIndex !== itemUnderMouseIndex) {
-                        console.log(itemUnderMouseIndex + " " + mouseArea.lastMultiselectionIndex);
-
                         if (mouseArea.lastMultiselectionIndex !== mouseArea.firstMultiselectionIndex) {
                             const isInitialDirectionDown = (mouseArea.firstMultiselectionIndex - mouseArea.lastMultiselectionIndex) < 0;
                             const isCurrentDirectionDown = itemUnderMouseIndex > mouseArea.lastMultiselectionIndex;
@@ -65,7 +63,6 @@ Item {
                             } else if (isCurrentDirectionDown) {
                                 root.updateItemSelection(mouseArea.lastMultiselectionIndex, false)
                             }
-
                         }
                         root.updateItemSelection(itemUnderMouseIndex, true);
                         mouseArea.lastMultiselectionIndex = itemUnderMouseIndex;
@@ -102,7 +99,6 @@ Item {
             enabled: mouseArea.lastMultiselectionIndex !== -1
             function onListViewPositionChanged() {
                 if (mouseArea.lastMultiselectionIndex !== -1) {
-                    console.log(mouseArea.listViewPosition);
                     mouseArea.checkMultiselection();
                 }
             }
