@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 
-qt_policy(SET QTP0001 NEW)
 qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(appLoggerEnhanced

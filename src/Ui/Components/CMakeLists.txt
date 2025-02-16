@@ -4,4 +4,5 @@ qt_add_qml_module(Ui_Components
     VERSION 1.0
     QML_FILES
         TextView.qml
+        TextViewDelegate.qml
 )

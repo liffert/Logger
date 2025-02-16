@@ -52,11 +52,21 @@ Item {
         contentWidth: Math.max(fileReaderModel.modelWidth + 10, scrollView.width)
         model: fileReaderModel.model
 
-        onItemSelected: function(index, exclusive) {
-            fileReaderModel.selectItem(index, exclusive);
-            internal.lastTextViewSelection = this;
-        }
         onCopySelection: fileReaderModel.copyToClipboardSelectedItems()
+
+        delegateComponent: TextViewDelegate {
+            id: delegate
+
+            required property var modelData
+            text: delegate.modelData.text
+            selected: delegate.modelData.selected
+
+            onSelected: function(exclusive){
+                scrollView.view.forceActiveFocus();
+                fileReaderModel.selectItem(delegate.index, exclusive);
+                internal.lastTextViewSelection = scrollView;
+            }
+        }
     }
 
     TextView {
@@ -68,16 +78,26 @@ Item {
         contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, scrollView.width)
         clip: true
         model: fileReaderModel.filteredModel
-        enableScrollToItemRecognition: true
-
-        onItemSelected: function(index, exclusive) {
-            fileReaderModel.selectFilteredItem(index, exclusive);
-            internal.lastTextViewSelection = this;
-        }
 
         onCopySelection: fileReaderModel.copyToClipboardSelectedFilteredItems()
-        onScrollToItem: function(index) {
-            scrollView.highlightItem(index);
+
+        delegateComponent: TextViewDelegate {
+            id: delegate
+
+            required property var modelData
+            text: delegate.modelData.text
+            selected: delegate.modelData.selected
+            lineIndex: delegate.modelData.originalIndex
+
+            onSelected: function(exclusive){
+                scrollView2.view.forceActiveFocus();
+                fileReaderModel.selectFilteredItem(delegate.index, exclusive);
+                internal.lastTextViewSelection = scrollView2;
+            }
+            onDoubleClicked: {
+                fileReaderModel.selectItem(delegate.lineIndex, true);
+                scrollView.view.positionViewAtIndex(delegate.lineIndex, ListView.Center);
+            }
         }
     }
 
