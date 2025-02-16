@@ -10,12 +10,9 @@ Rectangle {
 
     property int lineIndex: root.index
     property string text: ""
-    property bool selected: false
+    property bool isSelected: false
 
-    signal selected(var exclusive)
-    signal doubleClicked(var exclusive)
-
-    width: parent.width
+    width: parent?.width ?? root.width//TO CHECK ON BINDING LOOP
     height: textItem.height + 10
 
     Text {
@@ -26,23 +23,10 @@ Rectangle {
         text: root.text
     }
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: root
-        propagateComposedEvents: true
-        onPressed: function(mouse) {
-            root.selected(mouse.modifiers ^ Qt.ControlModifier);
-        }
-        onDoubleClicked: function(mouse) {
-            root.selected(mouse.modifiers ^ Qt.ControlModifier);
-            root.doubleClicked(mouse.modifiers ^ Qt.ControlModifier);
-        }
-    }
-
     states: [
         State {
             name: "selected"
-            when: root.selected
+            when: root.isSelected
             PropertyChanges {
                 root.color: "blue"
                 textItem.color: "white"

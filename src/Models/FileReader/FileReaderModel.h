@@ -46,8 +46,8 @@ public:
     ~FileReaderModel();
 
     Q_INVOKABLE void openFile(const QString& path);
-    Q_INVOKABLE void selectItem(int index, bool exclusive);
-    Q_INVOKABLE void selectFilteredItem(int index, bool exclusive);
+    Q_INVOKABLE void updateItemSelection(int index, bool exclusive, bool value);
+    Q_INVOKABLE void updateFilteredItemSelection(int index, bool exclusive, bool value);
     Q_INVOKABLE void copyToClipboardSelectedItems();
     Q_INVOKABLE void copyToClipboardSelectedFilteredItems();
 

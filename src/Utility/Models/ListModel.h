@@ -22,7 +22,7 @@ public:
     void remove(int index);
     void remove(const DataType& data);
     void reset();
-    void updateSelection(int index, bool exclusive);
+    void updateSelection(int index, bool exclusive, bool value);
     void resetSelection();
     const QList<DataType>& getRawData() const;
     const std::set<int>& getSelection() const;
@@ -136,7 +136,7 @@ inline void ListModel<DataType>::reset()
 }
 
 template<typename DataType>
-inline void ListModel<DataType>::updateSelection(int index, bool exclusive)
+inline void ListModel<DataType>::updateSelection(int index, bool exclusive, bool value)
 {
     if (index < 0 || index >= m_data.size()) {
         qWarning() << __PRETTY_FUNCTION__ << " index is out of bounds: " << index;
@@ -148,14 +148,15 @@ inline void ListModel<DataType>::updateSelection(int index, bool exclusive)
     }
 
     auto item = m_data.at(index);
-    item.selected = !item.selected;
-    if (item.selected) {
-        m_selectionHelper.insert(index);
-    } else {
-        m_selectionHelper.erase(index);
+    if (item.selected != value) {
+        item.selected = value;
+        if (item.selected) {
+            m_selectionHelper.insert(index);
+        } else {
+            m_selectionHelper.erase(index);
+        }
+        update(index, item);
     }
-
-    update(index, item);
 }
 
 template<typename DataType>

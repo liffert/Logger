@@ -89,14 +89,14 @@ void Models::FileReader::FileReaderModel::openFile(const QString &path)
     });
 }
 
-void Models::FileReader::FileReaderModel::selectItem(int index, bool exclusive)
+void Models::FileReader::FileReaderModel::updateItemSelection(int index, bool exclusive, bool value)
 {
-    m_model.updateSelection(index, exclusive);
+    m_model.updateSelection(index, exclusive, value);
 }
 
-void Models::FileReader::FileReaderModel::selectFilteredItem(int index, bool exclusive)
+void Models::FileReader::FileReaderModel::updateFilteredItemSelection(int index, bool exclusive, bool value)
 {
-    m_filteredModel.updateSelection(index, exclusive);
+    m_filteredModel.updateSelection(index, exclusive, value);
 }
 
 void Models::FileReader::FileReaderModel::copyToClipboardSelectedItems()

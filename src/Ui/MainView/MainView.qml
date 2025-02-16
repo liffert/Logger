@@ -52,20 +52,23 @@ Item {
         contentWidth: Math.max(fileReaderModel.modelWidth + 10, scrollView.width)
         model: fileReaderModel.model
 
-        onCopySelection: fileReaderModel.copyToClipboardSelectedItems()
-
         delegateComponent: TextViewDelegate {
             id: delegate
 
             required property var modelData
-            text: delegate.modelData.text
-            selected: delegate.modelData.selected
 
-            onSelected: function(exclusive){
-                scrollView.view.forceActiveFocus();
-                fileReaderModel.selectItem(delegate.index, exclusive);
-                internal.lastTextViewSelection = scrollView;
-            }
+            text: delegate.modelData.text
+            isSelected: delegate.modelData.selected
+        }
+
+        onCopySelection: fileReaderModel.copyToClipboardSelectedItems()
+        onUpdateItemSelection: function(index, value) {
+            fileReaderModel.updateItemSelection(index, false, value);
+        }
+        onItemSelected: function(item, exclusive) {
+            scrollView2.view.forceActiveFocus();
+            fileReaderModel.updateItemSelection(item.index, exclusive, !item.isSelected || exclusive);
+            internal.lastTextViewSelection = scrollView;
         }
     }
 
@@ -76,28 +79,33 @@ Item {
         anchors.bottom: root.bottom
         height: 300
         contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, scrollView.width)
-        clip: true
         model: fileReaderModel.filteredModel
-
-        onCopySelection: fileReaderModel.copyToClipboardSelectedFilteredItems()
 
         delegateComponent: TextViewDelegate {
             id: delegate
 
             required property var modelData
-            text: delegate.modelData.text
-            selected: delegate.modelData.selected
-            lineIndex: delegate.modelData.originalIndex
 
-            onSelected: function(exclusive){
-                scrollView2.view.forceActiveFocus();
-                fileReaderModel.selectFilteredItem(delegate.index, exclusive);
-                internal.lastTextViewSelection = scrollView2;
-            }
-            onDoubleClicked: {
-                fileReaderModel.selectItem(delegate.lineIndex, true);
-                scrollView.view.positionViewAtIndex(delegate.lineIndex, ListView.Center);
-            }
+            text: delegate.modelData.text
+            isSelected: delegate.modelData.selected
+            lineIndex: delegate.modelData.originalIndex
+        }
+
+        onCopySelection: fileReaderModel.copyToClipboardSelectedFilteredItems()
+        onUpdateItemSelection: function(index, value) {
+            fileReaderModel.updateFilteredItemSelection(index, false, value);
+        }
+
+        onItemSelected: function(item, exclusive) {
+            scrollView2.view.forceActiveFocus();
+            fileReaderModel.updateFilteredItemSelection(item.index, exclusive, !item.isSelected || exclusive);
+            internal.lastTextViewSelection = scrollView;
+        }
+
+        onItemDoubleClicked: function(item, exclusive) {
+            fileReaderModel.updateFilteredItemSelection(item.lineIndex, true, true);
+            fileReaderModel.updateItemSelection(item.lineIndex, true, true);
+            scrollView.view.positionViewAtIndex(item.lineIndex, ListView.Center);
         }
     }
 
