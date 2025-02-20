@@ -14,6 +14,10 @@ Item {
 
     readonly property alias currentIndex: tabBar.currentIndex
 
+    function openNewFile() {
+        fileDialog.open();
+    }
+
     //Add scroll area to make mouse friendly
     TabBar {
         id: tabBar
@@ -52,7 +56,7 @@ Item {
         anchors.bottom: tabBar.bottom
         text: "open file"
 
-        onClicked: fileDialog.open()
+        onClicked: root.openNewFile();
     }
 
     FileDialog  {

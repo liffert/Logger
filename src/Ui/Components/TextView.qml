@@ -10,9 +10,9 @@ Item {
 
     property alias model: listView.model
     property alias contentWidth: scrollView.contentWidth
+
     property Component delegateComponent: null
 
-    signal copySelection()
     signal updateItemSelection(var index, var value)
     signal itemSelected(var item, var exclusive)
     signal itemDoubleClicked(var item, var exclusive)
@@ -26,7 +26,7 @@ Item {
         contentHeight: listView.contentHeight
         clip: true
 
-        ListView {
+        ListView {//FIX SIZE
             id: listView
             delegate: root.delegateComponent
         }

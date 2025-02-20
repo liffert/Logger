@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Layouts
 
 import Models
 
@@ -11,12 +12,29 @@ Item {
 
     property alias filePath: fileReaderModel.filePath
 
-    function copy() {
-        //ToFix
-        if (fullFileView.view.activeFocus) {
+    function copy(copyAll) {
+        if (copyAll) {
+            fileReaderModel.copyAllItems();
+        } else if (internal.lastSelectedView === fullFileView) {
             fileReaderModel.copyToClipboardSelectedItems();
-        } else {
+        } else if (internal.lastSelectedView === filteredFileView) {
             fileReaderModel.copyToClipboardSelectedFilteredItems();
+        }
+    }
+
+    function deselect() {
+        if (internal.lastSelectedView === fullFileView) {
+            fileReaderModel.deselectItems();
+        } else if (internal.lastSelectedView === filteredFileView) {
+            fileReaderModel.deselectFilteredItems();
+        }
+    }
+
+    function selectAll() {
+        if (internal.lastSelectedView === fullFileView) {
+            fileReaderModel.selectAllItems();
+        } else if (internal.lastSelectedView === filteredFileView) {
+            fileReaderModel.selectAllFilteredItems();
         }
     }
 
@@ -45,8 +63,9 @@ Item {
         }
 
         onItemSelected: function(item, exclusive) {
-            filteredFileView.view.forceActiveFocus();
+            root.forceActiveFocus();
             fileReaderModel.updateItemSelection(item.index, exclusive, !item.isSelected || exclusive);
+            internal.lastSelectedView = fullFileView;
         }
     }
 
@@ -75,12 +94,13 @@ Item {
         }
 
         onItemSelected: function(item, exclusive) {
-            filteredFileView.view.forceActiveFocus();
+            root.forceActiveFocus();
             fileReaderModel.updateFilteredItemSelection(item.index, exclusive, !item.isSelected || exclusive);
+            internal.lastSelectedView = filteredFileView;
         }
 
         onItemDoubleClicked: function(item, exclusive) {
-            fileReaderModel.updateFilteredItemSelection(item.lineIndex, exclusive, true);
+            fileReaderModel.updateFilteredItemSelection(item.index, exclusive, true);
             fileReaderModel.updateItemSelection(item.lineIndex, true, true);
             fullFileView.view.positionViewAtIndex(item.lineIndex, ListView.Center);
         }
@@ -113,5 +133,10 @@ Item {
     FileReaderModel {
         id: fileReaderModel
         filter: filter.text
+    }
+
+    QtObject {
+        id: internal
+        property var lastSelectedView: null
     }
 }

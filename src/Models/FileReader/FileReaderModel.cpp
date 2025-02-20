@@ -109,6 +109,26 @@ void Models::FileReader::FileReaderModel::updateFilteredItemSelection(int index,
     m_filteredModel.updateSelection(index, exclusive, value);
 }
 
+void Models::FileReader::FileReaderModel::selectAllItems()
+{
+    selectAll(m_model);
+}
+
+void Models::FileReader::FileReaderModel::selectAllFilteredItems()
+{
+    selectAll(m_filteredModel);
+}
+
+void Models::FileReader::FileReaderModel::deselectItems()
+{
+    deselect(m_model);
+}
+
+void Models::FileReader::FileReaderModel::deselectFilteredItems()
+{
+    deselect(m_filteredModel);
+}
+
 void Models::FileReader::FileReaderModel::copyToClipboardSelectedItems()
 {
     copyToClipBoard(m_model);
@@ -117,6 +137,22 @@ void Models::FileReader::FileReaderModel::copyToClipboardSelectedItems()
 void Models::FileReader::FileReaderModel::copyToClipboardSelectedFilteredItems()
 {
     copyToClipBoard(m_filteredModel);
+}
+
+void Models::FileReader::FileReaderModel::copyAllItems()
+{
+    auto modelSelection = m_model.getSelection();
+    const auto& filteredModelSelection = m_filteredModel.getSelection();
+    const auto& filteredModelRawData = m_filteredModel.getRawData();
+
+    for (const auto& selection : filteredModelSelection) {
+        if (selection < 0 || selection >= filteredModelRawData.count()) {
+            continue;
+        }
+        modelSelection.insert(filteredModelRawData.at(selection).originalIndex);
+    }
+
+    copyToClipBoard(modelSelection, m_model.getRawData());
 }
 
 Utility::Models::ListModel<Models::FileReader::LogLine>* Models::FileReader::FileReaderModel::model()
@@ -217,20 +253,42 @@ int Models::FileReader::FileReaderModel::getModelWidthFromText(const QString& te
 template<typename DataType>
 void Models::FileReader::FileReaderModel::copyToClipBoard(const Utility::Models::ListModel<DataType>& model) const
 {
-    qInfo() << __PRETTY_FUNCTION__ << " 1";
-    const auto& selection = model.getSelection();
+    copyToClipBoard(model.getSelection(), model.getRawData());
+}
+
+template<typename DataType>
+void Models::FileReader::FileReaderModel::copyToClipBoard(const std::set<int>& selection, const QList<DataType>& data) const
+{
     if (selection.empty()) {
         return;
     }
-    qInfo() << __PRETTY_FUNCTION__ << " 2";
 
-    const auto& data = model.getRawData();
     QStringList selectedItems;
-    for (const auto& index : selection) {
-        selectedItems << data.at(index).text;
+    for (const auto& selection : selection) {
+        if (selection < 0 || selection >= data.count()) {
+            continue;
+        }
+        selectedItems << data.at(selection).text;
     }
-    qInfo() << __PRETTY_FUNCTION__ << " 3 " << selectedItems.join("\n");
 
     auto* clipboard = QGuiApplication::clipboard();
     clipboard->setText(selectedItems.join("\n"));
+}
+
+template<typename DataType>
+void Models::FileReader::FileReaderModel::deselect(Utility::Models::ListModel<DataType>& model)
+{
+    const auto selection = model.getSelection();
+
+    for (const auto& selection : selection) {
+        model.updateSelection(selection, false, false);
+    }
+}
+
+template<typename DataType>
+void Models::FileReader::FileReaderModel::selectAll(Utility::Models::ListModel<DataType>& model)
+{
+    for (int i = 0; i < model.rowCount(); i++) {
+        model.updateSelection(i, false, true);
+    }
 }

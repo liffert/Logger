@@ -19,7 +19,6 @@ Item {
         anchors.top: root.top
     }
 
-    // Stack layout
     StackLayout {
         id: openedFiles
 
@@ -40,13 +39,46 @@ Item {
                 required property var modelData
 
                 filePath: modelData.path
+
+                Connections {
+                    target: copyShortcut
+                    function onActivated() {
+                        if (openedFileView.StackLayout.isCurrentItem) {
+                            openedFileView.copy(false);
+                        }
+                    }
+                }
+
+                Connections {
+                    target: copyAllShortcut
+                    function onActivated() {
+                        if (openedFileView.StackLayout.isCurrentItem) {
+                            openedFileView.copy(true);
+                        }
+                    }
+                }
+
+                Connections {
+                    target: deselectShortcut
+                    function onActivated() {
+                        if (openedFileView.StackLayout.isCurrentItem) {
+                            openedFileView.deselect();
+                        }
+                    }
+                }
+
+                Connections {
+                    target: selectAllShortcut
+                    function onActivated() {
+                        if (openedFileView.StackLayout.isCurrentItem) {
+                            openedFileView.selectAll();
+                        }
+                    }
+                }
             }
         }
     }
 
-    ///
-
-    //No opened files message
     Loader {
         anchors.fill: root
         active: openedFiles.count === 0
@@ -56,15 +88,34 @@ Item {
         }
     }
 
-    ///
-
-    //Helpers
-
-    Shortcut {//To add Ctrl+O, Ctrl+shift+C
+    Shortcut {
+        id: copyShortcut
         context: Qt.ApplicationShortcut
         sequences: [StandardKey.Copy]
-        onActivated: {
-            openedFileView.copy();
-        }
+    }
+
+    Shortcut {
+        id: selectAllShortcut
+        context: Qt.ApplicationShortcut
+        sequences: [StandardKey.SelectAll]
+    }
+
+    Shortcut {
+        id: openFileShortcut
+        context: Qt.ApplicationShortcut
+        sequences: [StandardKey.Open]
+        onActivated: tabBar.openNewFile()
+    }
+
+    Shortcut {
+        id: copyAllShortcut
+        context: Qt.ApplicationShortcut
+        sequence: "Ctrl+Shift+C"
+    }
+
+    Shortcut {
+        id: deselectShortcut
+        context: Qt.ApplicationShortcut
+        sequence: "Esc"
     }
 }
