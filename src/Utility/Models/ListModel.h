@@ -21,6 +21,7 @@ public:
     void pushBack(const DataType& data);
     void remove(int index);
     void remove(const DataType& data);
+    void remove(const std::function<bool(const DataType&)>& comparator);
     void reset();
     void updateSelection(int index, bool exclusive, bool value);
     void resetSelection();
@@ -123,6 +124,17 @@ inline void ListModel<DataType>::remove(const DataType& data)
     const auto itemIndex = m_data.indexOf(data);
     if (itemIndex != -1) {
         remove(itemIndex);
+    }
+}
+
+template<typename DataType>
+inline void ListModel<DataType>::remove(const std::function<bool(const DataType&)>& comparator)//NOT TESTED
+{
+    if (comparator) {
+        const auto iter = std::find_if(m_data.cbegin(), m_data.cend(), comparator);
+        if (iter != m_data.cend()) {
+            remove(std::distance(m_data.cbegin(), iter));
+        }
     }
 }
 

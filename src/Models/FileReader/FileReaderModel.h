@@ -38,6 +38,7 @@ class FileReaderModel : public QObject {
     Q_PROPERTY(Utility::Models::ListModel<LogLine> *model READ model() CONSTANT)
     Q_PROPERTY(Utility::Models::ListModel<FilteredLogLine> *filteredModel READ filteredModel() CONSTANT)
     Q_PROPERTY(QString filter MEMBER m_filter NOTIFY filterChanged)
+    Q_PROPERTY(QString filePath MEMBER m_filePath NOTIFY filePathChanged)
     Q_PROPERTY(int modelWidth MEMBER m_modelWidth NOTIFY modelWidthChanged)
     Q_PROPERTY(int filteredModelWidth MEMBER m_filteredModelWidth NOTIFY filteredModelWidthChanged)
 
@@ -45,7 +46,6 @@ public:
     FileReaderModel(QObject* parent = nullptr);
     ~FileReaderModel();
 
-    Q_INVOKABLE void openFile(const QString& path);
     Q_INVOKABLE void updateItemSelection(int index, bool exclusive, bool value);
     Q_INVOKABLE void updateFilteredItemSelection(int index, bool exclusive, bool value);
     Q_INVOKABLE void copyToClipboardSelectedItems();
@@ -56,10 +56,13 @@ public:
 
 signals:
     void filterChanged();
+    void filePathChanged();
     void modelWidthChanged();
     void filteredModelWidthChanged();
 
 private:
+    void openFile();
+    void processFile(const std::stop_token& stopToken);
     void startFromTheBeginningIfNeeded(bool force, Qt::ConnectionType invocationType);
     void pushToModel(const QString& text);
     void pushToFilteredModel(const LogLine& item, int originalIndex);
@@ -79,6 +82,7 @@ private:
     Utility::Models::ListModel<LogLine> m_model;
     Utility::Models::ListModel<FilteredLogLine> m_filteredModel;
     QString m_filter;
+    QString m_filePath;
     int m_modelWidth = 0;
     int m_filteredModelWidth = 0;
 

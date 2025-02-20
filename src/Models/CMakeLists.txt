@@ -1,6 +1,7 @@
 set(MODELS_HEADERS )
 set(MODELS_SOURCES )
 
+find_package(Qt6 REQUIRED COMPONENTS Gui)
 add_subdirectory(FileReader/)
 
 qt_add_library(Models STATIC)

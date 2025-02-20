@@ -5,4 +5,6 @@ qt_add_qml_module(Ui_MainView
     QML_FILES
         MainView.qml
         NoFileOpenedView.qml
+        OpenedFileView.qml
+        OpenedFilesTabBar.qml
 )

@@ -27,6 +27,8 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
             }
         }
     });
+
+    connect(this, &FileReaderModel::filePathChanged, this, &FileReaderModel::openFile);
 }
 
 Models::FileReader::FileReaderModel::~FileReaderModel()
@@ -34,59 +36,67 @@ Models::FileReader::FileReaderModel::~FileReaderModel()
     releaseCurrentFile();
 }
 
-void Models::FileReader::FileReaderModel::openFile(const QString &path)
+void Models::FileReader::FileReaderModel::openFile()
 {
-    qInfo() << __PRETTY_FUNCTION__ << " " << path;
+    qInfo() << __PRETTY_FUNCTION__ << " " << m_filePath;
     if (m_file.isOpen()) {
         releaseCurrentFile();
     }
 
-    const auto localPath = QUrl(path).toLocalFile();
-    m_file.setFileName(localPath);
-    m_file.open(QIODevice::ReadOnly);
-    if (m_file.isOpen()) {
-        m_fileWatcher.addFilePath(localPath);
+    if (m_filePath.isEmpty()) {
+        qInfo() << __PRETTY_FUNCTION__ << " file path is empty";
+        return;
     }
+
+    m_file.setFileName(m_filePath);
+    m_file.open(QIODevice::ReadOnly);
 
     m_stream.setDevice(&m_file);
     startFromTheBeginningIfNeeded(true, Qt::DirectConnection);
 
-    m_thread = std::make_unique<std::jthread>([this](const std::stop_token& stopToken) {
-        while (true && !stopToken.stop_requested()) {
-            std::unique_lock lock(m_fileMutex);
-            m_allowReading.wait(lock, [this, &stopToken]() {
-                return !m_stream.atEnd() || m_refilter || stopToken.stop_requested();
-            });
+    m_thread = std::make_unique<std::jthread>(&FileReaderModel::processFile, this);
+}
 
-            while (!stopToken.stop_requested()) {
-                while (m_refilter && !stopToken.stop_requested()) {
-                    m_refilter = false;
-                    QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
+void Models::FileReader::FileReaderModel::processFile(const std::stop_token& stopToken)
+{
+    while (!stopToken.stop_requested()) {
+        std::unique_lock lock(m_fileMutex);
+        m_allowReading.wait(lock, [this, &stopToken]() {
+            return !m_stream.atEnd() || m_refilter || stopToken.stop_requested();
+        });
 
-                    QList<LogLine> data;
-                    //Block to retreive full data
-                    QMetaObject::invokeMethod(this, [this]() {
-                        return m_model.getRawData();
-                    }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
+        while (!stopToken.stop_requested()) {
+            while (m_refilter && !stopToken.stop_requested()) {
+                m_refilter = false;
+                QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
 
-                    for (int i = 0; i < data.size(); i++) {
-                        if (m_refilter || stopToken.stop_requested()) {
-                            break;
-                        }
-                        QMetaObject::invokeMethod(this, &FileReaderModel::pushToFilteredModel, Qt::QueuedConnection, data.at(i), i);
+                if (m_filter.isEmpty()) {
+                    return;
+                }
+
+                QList<LogLine> data;
+                //Block to retreive full data
+                QMetaObject::invokeMethod(this, [this]() {
+                    return m_model.getRawData();
+                }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
+
+                for (int i = 0; i < data.size(); i++) {
+                    if (m_refilter || stopToken.stop_requested()) {
+                        break;
                     }
+                    QMetaObject::invokeMethod(this, &FileReaderModel::pushToFilteredModel, Qt::QueuedConnection, data.at(i), i);
                 }
-
-                if (m_stream.atEnd()) {
-                    break;
-                }
-
-                startFromTheBeginningIfNeeded(false, Qt::QueuedConnection);
-                QMetaObject::invokeMethod(this, &FileReaderModel::pushToModel, Qt::QueuedConnection, m_stream.readLine());
-                m_fileSize = m_file.size();
             }
+
+            if (m_stream.atEnd()) {
+                break;
+            }
+
+            startFromTheBeginningIfNeeded(false, Qt::QueuedConnection);
+            QMetaObject::invokeMethod(this, &FileReaderModel::pushToModel, Qt::QueuedConnection, m_stream.readLine());
+            m_fileSize = m_file.size();
         }
-    });
+    }
 }
 
 void Models::FileReader::FileReaderModel::updateItemSelection(int index, bool exclusive, bool value)
@@ -156,7 +166,6 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
         m_thread->request_stop();
     }
     m_allowReading.notify_one();
-    m_fileWatcher.removeFilePath(m_file.fileName());
     m_file.close();
 }
 
