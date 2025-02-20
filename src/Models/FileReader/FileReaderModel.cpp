@@ -70,7 +70,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 m_refilter = false;
                 QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
 
-                if (!m_filter.isEmpty()) {
+                if (m_filter.isEmpty()) {
                     break;
                 }
 
