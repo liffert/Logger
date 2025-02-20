@@ -48,7 +48,8 @@ SplitView {
         SplitView.fillHeight: true
         SplitView.minimumHeight: 40//set to delegate height
 
-        contentWidth: Math.max(fileReaderModel.modelWidth + 10, fullFileView.width - fullFileView.effectiveScrollBarWidth)
+        //CHECK Binding loop
+        contentWidth: Math.max(fileReaderModel.modelWidth + 10, root.width - fullFileView.effectiveScrollBarWidth)//
         model: fileReaderModel.model
 
         delegateComponent: TextViewDelegate {
@@ -94,12 +95,13 @@ SplitView {
             anchors.top: filter.top
         }
 
-        TextEdit {
+        TextInput {
             id: filter
             anchors.left: filterText.right
             anchors.right: filteredViewItem.right
             anchors.top: filteredViewItem.top
             height: filterText.height
+            onAccepted: fileReaderModel.filter = filter.displayText
         }
 
         TextView {
@@ -110,7 +112,8 @@ SplitView {
             anchors.top: filter.bottom
             anchors.bottom: filteredViewItem.bottom
 
-            contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, filteredFileView.width - filteredFileView.effectiveScrollBarWidth)
+            //CHECK Binding loop
+            contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, root.width - filteredFileView.effectiveScrollBarWidth)
             model: fileReaderModel.filteredModel
 
             delegateComponent: TextViewDelegate {
@@ -145,7 +148,6 @@ SplitView {
 
     FileReaderModel {
         id: fileReaderModel
-        filter: filter.text
     }
 
     QtObject {

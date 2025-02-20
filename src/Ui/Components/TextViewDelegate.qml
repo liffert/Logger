@@ -40,6 +40,7 @@ Item {
         text: root.lineIndex
         anchors.left: lineIndexItem.left
         anchors.leftMargin: 10
+        anchors.verticalCenter: root.verticalCenter
         color: "white"
     }
 
