@@ -189,6 +189,10 @@ void Models::FileReader::FileReaderModel::pushToModel(const QString& text)
 
 void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& item, int originalIndex)
 {
+    if (m_filter.isEmpty()) {
+        return;
+    }
+
     QRegularExpression regExp(m_filter, QRegularExpression::CaseInsensitiveOption);
     const auto text = item.text;
     if (text.contains(regExp)) {

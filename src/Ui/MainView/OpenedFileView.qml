@@ -2,13 +2,16 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 
 import Models
 
 import Ui.Components
 
-Item {
+SplitView {
     id: root
+
+    orientation: Qt.Vertical
 
     property alias filePath: fileReaderModel.filePath
 
@@ -40,12 +43,12 @@ Item {
 
     TextView {
         id: fullFileView
-        anchors.left: root.left
-        anchors.right: root.right
-        anchors.top: root.top
-        anchors.bottom: filteredFileView.top
-        anchors.bottomMargin: 50
-        contentWidth: Math.max(fileReaderModel.modelWidth + 10, fullFileView.width)
+
+        SplitView.fillWidth: true
+        SplitView.fillHeight: true
+        SplitView.minimumHeight: 40//set to delegate height
+
+        contentWidth: Math.max(fileReaderModel.modelWidth + 10, fullFileView.width - fullFileView.effectiveScrollBarWidth)
         model: fileReaderModel.model
 
         delegateComponent: TextViewDelegate {
@@ -69,65 +72,75 @@ Item {
         }
     }
 
-    TextView {
-        id: filteredFileView
-        anchors.left: root.left
-        anchors.right: root.right
-        anchors.bottom: root.bottom
-        height: 300
-        contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, fullFileView.width)
-        model: fileReaderModel.filteredModel
+    Item {
+        id: filteredViewItem
 
-        delegateComponent: TextViewDelegate {
-            id: delegate
+        SplitView.fillWidth: true
+        SplitView.preferredHeight: 300
+        SplitView.minimumHeight: 40//Set to delegate height + filter height
 
-            required property var modelData
-
-            text: delegate.modelData.text
-            isSelected: delegate.modelData.selected
-            lineIndex: delegate.modelData.originalIndex
-            lineIndexItemWidth: fileReaderModel.lineIndexItemWidth
+        Rectangle {
+            color: "white"
+            anchors.left: filteredViewItem.left
+            anchors.right: filteredViewItem.right
+            anchors.top: filteredViewItem.top
+            height: filterText.height
         }
 
-        onUpdateItemSelection: function(index, value) {
-            fileReaderModel.updateFilteredItemSelection(index, false, value);
+        Text {
+            id: filterText
+            text: "CurrentFilter: "
+            anchors.left: filteredViewItem.left
+            anchors.top: filter.top
         }
 
-        onItemSelected: function(item, exclusive) {
-            root.forceActiveFocus();
-            fileReaderModel.updateFilteredItemSelection(item.index, exclusive, !item.isSelected || exclusive);
-            internal.lastSelectedView = filteredFileView;
+        TextEdit {
+            id: filter
+            anchors.left: filterText.right
+            anchors.right: filteredViewItem.right
+            anchors.top: filteredViewItem.top
+            height: filterText.height
         }
 
-        onItemDoubleClicked: function(item, exclusive) {
-            fileReaderModel.updateFilteredItemSelection(item.index, exclusive, true);
-            fileReaderModel.updateItemSelection(item.lineIndex, true, true);
-            fullFileView.view.positionViewAtIndex(item.lineIndex, ListView.Center);
+        TextView {
+            id: filteredFileView
+
+            anchors.left: filteredViewItem.left
+            anchors.right: filteredViewItem.right
+            anchors.top: filter.bottom
+            anchors.bottom: filteredViewItem.bottom
+
+            contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, filteredFileView.width - filteredFileView.effectiveScrollBarWidth)
+            model: fileReaderModel.filteredModel
+
+            delegateComponent: TextViewDelegate {
+                id: delegate
+
+                required property var modelData
+
+                text: delegate.modelData.text
+                isSelected: delegate.modelData.selected
+                lineIndex: delegate.modelData.originalIndex
+                lineIndexItemWidth: fileReaderModel.lineIndexItemWidth
+            }
+
+            onUpdateItemSelection: function(index, value) {
+                fileReaderModel.updateFilteredItemSelection(index, false, value);
+            }
+
+            onItemSelected: function(item, exclusive) {
+                root.forceActiveFocus();
+                fileReaderModel.updateFilteredItemSelection(item.index, exclusive, !item.isSelected || exclusive);
+                internal.lastSelectedView = filteredFileView;
+            }
+
+            onItemDoubleClicked: function(item, exclusive) {
+                fileReaderModel.updateFilteredItemSelection(item.index, exclusive, true);
+                fileReaderModel.updateItemSelection(item.lineIndex, true, true);
+                fullFileView.view.positionViewAtIndex(item.lineIndex, ListView.Center);
+            }
         }
-    }
 
-
-    Rectangle {
-        color: "white"
-        anchors.left: root.left
-        anchors.right: root.right
-        anchors.top: fullFileView.bottom
-        height: filterText.height
-    }
-
-    Text {
-        id: filterText
-        text: "CurrentFilter: "
-        anchors.left: root.left
-        anchors.top: filter.top
-    }
-
-    TextEdit {
-        id: filter
-        anchors.left: filterText.right
-        anchors.right: root.right
-        anchors.top: fullFileView.bottom
-        height: filterText.height
     }
 
     FileReaderModel {

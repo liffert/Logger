@@ -10,6 +10,7 @@ Item {
 
     property alias model: listView.model
     property alias contentWidth: scrollView.contentWidth
+    property alias effectiveScrollBarWidth: scrollView.effectiveScrollBarWidth
 
     property Component delegateComponent: null
 
@@ -24,11 +25,11 @@ Item {
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
         ScrollBar.vertical.policy: ScrollBar.AlwaysOn
         contentHeight: listView.contentHeight
-        clip: true
 
-        ListView {//FIX SIZE
+        ListView {
             id: listView
             delegate: root.delegateComponent
+            clip: true
         }
     }
 
@@ -106,5 +107,4 @@ Item {
             }
         }
     }
-
 }
