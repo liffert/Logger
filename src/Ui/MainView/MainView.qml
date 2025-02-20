@@ -60,13 +60,6 @@ Item {
 
     //Helpers
 
-    FileDialog  {
-        id: fileDialog
-        currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-        fileMode: FileDialog.OpenFile
-        onAccepted: FileSystemWatcher.addFilePath(fileDialog.selectedFile)
-    }
-
     Shortcut {//To add Ctrl+O, Ctrl+shift+C
         context: Qt.ApplicationShortcut
         sequences: [StandardKey.Copy]

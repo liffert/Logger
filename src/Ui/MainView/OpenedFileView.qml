@@ -42,6 +42,7 @@ Item {
         onUpdateItemSelection: function(index, value) {
             fileReaderModel.updateItemSelection(index, false, value);
         }
+
         onItemSelected: function(item, exclusive) {
             filteredFileView.view.forceActiveFocus();
             fileReaderModel.updateItemSelection(item.index, exclusive, !item.isSelected || exclusive);
