@@ -37,6 +37,7 @@ Item {
 
             text: delegate.modelData.text
             isSelected: delegate.modelData.selected
+            lineIndexItemWidth: fileReaderModel.lineIndexItemWidth
         }
 
         onUpdateItemSelection: function(index, value) {
@@ -66,6 +67,7 @@ Item {
             text: delegate.modelData.text
             isSelected: delegate.modelData.selected
             lineIndex: delegate.modelData.originalIndex
+            lineIndexItemWidth: fileReaderModel.lineIndexItemWidth
         }
 
         onUpdateItemSelection: function(index, value) {

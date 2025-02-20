@@ -35,6 +35,8 @@ Item {
     MouseArea {
         id: mouseArea
         anchors.fill: scrollView
+        anchors.rightMargin: scrollView.effectiveScrollBarWidth
+        anchors.bottomMargin: scrollView.effectiveScrollBarHeight
 
         readonly property int defaultX: mouseArea.width / 2
 

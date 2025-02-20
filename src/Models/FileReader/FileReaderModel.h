@@ -41,6 +41,7 @@ class FileReaderModel : public QObject {
     Q_PROPERTY(QString filePath MEMBER m_filePath NOTIFY filePathChanged)
     Q_PROPERTY(int modelWidth MEMBER m_modelWidth NOTIFY modelWidthChanged)
     Q_PROPERTY(int filteredModelWidth MEMBER m_filteredModelWidth NOTIFY filteredModelWidthChanged)
+    Q_PROPERTY(int lineIndexItemWidth MEMBER m_lineIndexItemWidth NOTIFY lineIndexItemWidthChanged)
 
 public:
     FileReaderModel(QObject* parent = nullptr);
@@ -59,6 +60,7 @@ signals:
     void filePathChanged();
     void modelWidthChanged();
     void filteredModelWidthChanged();
+    void lineIndexItemWidthChanged();
 
 private:
     void openFile();
@@ -69,10 +71,12 @@ private:
     void releaseCurrentFile();
     void setModelWidth(int value, bool onlyIfHigher = false);
     void setFilteredModelWidth(int value, bool onlyIfHigher = false);
+    void setLineIndexItemWidth(int currentModelCount);
     void resetModel();
     void resetFilteredModel();
     template<typename DataType>
     void copyToClipBoard(const Utility::Models::ListModel<DataType>& model) const;
+    int getModelWidthFromText(const QString& text) const;
 
     QFile m_file;
     QTextStream m_stream;
@@ -85,6 +89,7 @@ private:
     QString m_filePath;
     int m_modelWidth = 0;
     int m_filteredModelWidth = 0;
+    int m_lineIndexItemWidth = 0;
 
     std::mutex m_fileMutex;
     std::unique_ptr<std::jthread> m_thread;

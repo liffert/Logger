@@ -145,7 +145,8 @@ void Models::FileReader::FileReaderModel::pushToModel(const QString& text)
         const auto modelIndex = m_model.rowCount();
         Models::FileReader::LogLine modelItem({.text = text});
         m_model.insert(modelIndex, modelItem);
-        setModelWidth(m_fontMetrics.horizontalAdvance(text), true);
+        setLineIndexItemWidth(modelIndex + 1);
+        setModelWidth(getModelWidthFromText(text), true);
         pushToFilteredModel(modelItem, modelIndex);
     }
 }
@@ -156,7 +157,7 @@ void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& ite
     const auto text = item.text;
     if (text.contains(regExp)) {
         m_filteredModel.pushBack({text, false, originalIndex});
-        setFilteredModelWidth(m_fontMetrics.horizontalAdvance(text), true);
+        setFilteredModelWidth(getModelWidthFromText(text), true);
     }
 }
 
@@ -185,6 +186,17 @@ void Models::FileReader::FileReaderModel::setFilteredModelWidth(int value, bool 
     }
 }
 
+void Models::FileReader::FileReaderModel::setLineIndexItemWidth(int currentModelCount)
+{
+    static constexpr int minimunWidth = 100;
+    static constexpr int margins = 20;
+    const auto newWidth = std::max(minimunWidth, m_fontMetrics.horizontalAdvance(QString::number(currentModelCount)) + margins);
+    if (newWidth != m_lineIndexItemWidth) {
+        m_lineIndexItemWidth = newWidth;
+        emit lineIndexItemWidthChanged();
+    }
+}
+
 void Models::FileReader::FileReaderModel::resetModel()
 {
     m_model.reset();;
@@ -195,6 +207,11 @@ void Models::FileReader::FileReaderModel::resetFilteredModel()
 {
     m_filteredModel.reset();
     setFilteredModelWidth(0);
+}
+
+int Models::FileReader::FileReaderModel::getModelWidthFromText(const QString& text) const
+{
+    return m_fontMetrics.horizontalAdvance(text) + m_lineIndexItemWidth;
 }
 
 template<typename DataType>
