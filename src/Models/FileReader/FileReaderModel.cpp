@@ -5,13 +5,12 @@
 
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
-    m_fileWatcher(Utility::FileSystemWatcher::instance()),
-    m_fontMetrics({})
+    m_fileWatcher(Utility::FileSystemWatcher::instance())
 {
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_file.fileName()) {
             if (m_fileMutex.try_lock()) {
-                startFromTheBeginningIfNeeded(false, Qt::DirectConnection);
+                startFromTheBeginningIfNeeded(false, Qt::QueuedConnection);
                 m_fileMutex.unlock();
             }
             m_allowReading.notify_one();
@@ -74,9 +73,11 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     break;
                 }
 
+                //Should not have any performance issues because QList is implicitly shared container meaning.
+                //Also provides safety mechanism in case if there for some reason will be a race condition.
                 QList<LogLine> data;
                 //Block to retreive full data
-                QMetaObject::invokeMethod(this, [this]() {
+                QMetaObject::invokeMethod(this, [this, &data]() {
                     return m_model.getRawData();
                 }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
 
@@ -84,6 +85,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     if (m_refilter || stopToken.stop_requested()) {
                         break;
                     }
+                    //UI THREAD FREEZES
                     QMetaObject::invokeMethod(this, &FileReaderModel::pushToFilteredModel, Qt::QueuedConnection, data.at(i), i);
                 }
             }
@@ -181,23 +183,18 @@ void Models::FileReader::FileReaderModel::pushToModel(const QString& text)
         const auto modelIndex = m_model.rowCount();
         Models::FileReader::LogLine modelItem({.text = text});
         m_model.insert(modelIndex, modelItem);
-        setLineIndexItemWidth(modelIndex + 1);
-        setModelWidth(getModelWidthFromText(text), true);
-        pushToFilteredModel(modelItem, modelIndex);
+        if (!m_filter.isEmpty()) {
+            pushToFilteredModel(modelItem, modelIndex);
+        }
     }
 }
 
 void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& item, int originalIndex)
 {
-    if (m_filter.isEmpty()) {
-        return;
-    }
-
     QRegularExpression regExp(m_filter, QRegularExpression::CaseInsensitiveOption);
     const auto text = item.text;
     if (text.contains(regExp)) {
         m_filteredModel.pushBack({text, false, originalIndex});
-        setFilteredModelWidth(getModelWidthFromText(text), true);
     }
 }
 
@@ -210,48 +207,14 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
     m_file.close();
 }
 
-void Models::FileReader::FileReaderModel::setModelWidth(int value, bool onlyIfHigher)
-{
-    if (m_modelWidth != value && (!onlyIfHigher || m_modelWidth < value)) {
-        m_modelWidth = value;
-        emit modelWidthChanged();
-    }
-}
-
-void Models::FileReader::FileReaderModel::setFilteredModelWidth(int value, bool onlyIfHigher)
-{
-    if (m_filteredModelWidth != value && (!onlyIfHigher || m_filteredModelWidth < value)) {
-        m_filteredModelWidth = value;
-        emit filteredModelWidthChanged();
-    }
-}
-
-void Models::FileReader::FileReaderModel::setLineIndexItemWidth(int currentModelCount)
-{
-    static constexpr int minimunWidth = 100;
-    static constexpr int margins = 20;
-    const auto newWidth = std::max(minimunWidth, m_fontMetrics.horizontalAdvance(QString::number(currentModelCount)) + margins);
-    if (newWidth != m_lineIndexItemWidth) {
-        m_lineIndexItemWidth = newWidth;
-        emit lineIndexItemWidthChanged();
-    }
-}
-
 void Models::FileReader::FileReaderModel::resetModel()
 {
-    m_model.reset();;
-    setModelWidth(0);
+    m_model.reset();
 }
 
 void Models::FileReader::FileReaderModel::resetFilteredModel()
 {
     m_filteredModel.reset();
-    setFilteredModelWidth(0);
-}
-
-int Models::FileReader::FileReaderModel::getModelWidthFromText(const QString& text) const
-{
-    return m_fontMetrics.horizontalAdvance(text) + m_lineIndexItemWidth;
 }
 
 template<typename DataType>

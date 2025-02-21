@@ -9,7 +9,6 @@ Item {
     readonly property alias view: listView
 
     property alias model: listView.model
-    property alias contentWidth: scrollView.contentWidth
     property alias effectiveScrollBarWidth: scrollView.effectiveScrollBarWidth
 
     property Component delegateComponent: null
@@ -25,6 +24,7 @@ Item {
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
         ScrollBar.vertical.policy: ScrollBar.AlwaysOn
         contentHeight: listView.contentHeight
+        contentWidth: listView.contentWidth
 
         ListView {
             id: listView

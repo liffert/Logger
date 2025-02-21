@@ -48,8 +48,6 @@ SplitView {
         SplitView.fillHeight: true
         SplitView.minimumHeight: 40//set to delegate height
 
-        //CHECK Binding loop
-        contentWidth: Math.max(fileReaderModel.modelWidth + 10, root.width - fullFileView.effectiveScrollBarWidth)//
         model: fileReaderModel.model
 
         delegateComponent: TextViewDelegate {
@@ -59,7 +57,6 @@ SplitView {
 
             text: delegate.modelData.text
             isSelected: delegate.modelData.selected
-            lineIndexItemWidth: fileReaderModel.lineIndexItemWidth
         }
 
         onUpdateItemSelection: function(index, value) {
@@ -112,8 +109,6 @@ SplitView {
             anchors.top: filter.bottom
             anchors.bottom: filteredViewItem.bottom
 
-            //CHECK Binding loop
-            contentWidth: Math.max(fileReaderModel.filteredModelWidth + 10, root.width - filteredFileView.effectiveScrollBarWidth)
             model: fileReaderModel.filteredModel
 
             delegateComponent: TextViewDelegate {
@@ -124,7 +119,6 @@ SplitView {
                 text: delegate.modelData.text
                 isSelected: delegate.modelData.selected
                 lineIndex: delegate.modelData.originalIndex
-                lineIndexItemWidth: fileReaderModel.lineIndexItemWidth
             }
 
             onUpdateItemSelection: function(index, value) {

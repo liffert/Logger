@@ -8,19 +8,28 @@ Item {
 
     required property int index
 
+    readonly property int contentWidth: root.childrenRect.width
+
+    //Maybe think of something better
     property int lineIndex: root.index
-    property int lineIndexItemWidth: 0
     property string text: ""
     property bool isSelected: false
 
-    width: parent?.width ?? root.width//TO CHECK ON BINDING LOOP
-    height: textItem.height + 10
+    width: parent?.width ?? root.contentWidth
+    height: 20//Check some another way to be able to change fonts
+
+    onContentWidthChanged: {
+        //Not ideal as does not reset on the rewriting at the moment.
+        if (ListView.view.contentWidth < root.contentWidth) {
+            ListView.view.contentWidth = root.contentWidth;
+        }
+    }
 
     Rectangle {
         id: lineIndexItem
         anchors.top: root.top
         anchors.bottom: root.bottom
-        width: root.lineIndexItemWidth
+        width: 100//ListView.view.count
         color: "grey"
     }
 
@@ -38,8 +47,8 @@ Item {
     Text {
         id: lineIndexItemText
         text: root.lineIndex
-        anchors.left: lineIndexItem.left
-        anchors.leftMargin: 10
+        anchors.right: lineIndexItem.right
+        anchors.rightMargin: 10
         anchors.verticalCenter: root.verticalCenter
         color: "white"
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QSharedPointer>
 #include <set>
 
 namespace Utility::Models {
