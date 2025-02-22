@@ -20,7 +20,6 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
 
     connect(this, &FileReaderModel::filterChanged, this, [this]() {
         if (m_file.isOpen()) {
-            //Better mutex or atomic for the usecase?
             if (!m_refilter) {
                 m_refilter = true;
                 m_allowReading.notify_one();
@@ -151,7 +150,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
             m_model.pushBack(items);
             m_filteredModel.pushBack(filteredItems);
         }, Qt::QueuedConnection);
-        QMetaObject::invokeMethod(this, &FileReaderModel::test, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, &FileReaderModel::itemsAdded, Qt::QueuedConnection);
     }
 }
 
@@ -238,7 +237,6 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
 void Models::FileReader::FileReaderModel::releaseCurrentFile()
 {
     if (m_thread) {
-        qInfo() << "requestStop";
         m_thread->request_stop();
     }
     m_allowReading.notify_one();

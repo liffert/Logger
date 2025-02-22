@@ -142,7 +142,7 @@ SplitView {
 
     FileReaderModel {
         id: fileReaderModel
-        onTest: {
+        onItemsAdded: {
             fullFileView.view.positionViewAtEnd();
             filteredFileView.view.positionViewAtEnd();
         }

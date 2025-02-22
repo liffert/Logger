@@ -60,7 +60,7 @@ public:
 signals:
     void filterChanged();
     void filePathChanged();
-    void test();
+    void itemsAdded();
 
 private:
     void openFile();

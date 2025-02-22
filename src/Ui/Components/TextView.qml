@@ -31,18 +31,33 @@ Item {
             id: listView
             delegate: root.delegateComponent
             clip: true
+            flickableDirection: Flickable.AutoFlickDirection
 
-            //Make scrolling faster
+            //Make scrolling faster.
+            //Add settings for each scrolling speed.
             WheelHandler {
                 target: listView
                 property: "contentY"
                 rotationScale: -5
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                orientation: Qt.Vertical
+            }
+
+            WheelHandler {
+                target: listView
+                property: "contentX"
+                rotationScale: -5
+                orientation: Qt.Horizontal
             }
 
             BoundaryRule on contentY {
                 minimum: listView.originY
                 maximum: listView.originY + listView.contentHeight - listView.height
+                returnDuration: 0
+            }
+
+            BoundaryRule on contentX {
+                minimum: listView.originX
+                maximum: listView.originX + listView.contentWidth - listView.width
                 returnDuration: 0
             }
         }
