@@ -2,6 +2,7 @@
 #include <QRegularExpression>
 #include <QGuiApplication>
 #include <QClipboard>
+#include <chrono>
 
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
@@ -58,55 +59,99 @@ void Models::FileReader::FileReaderModel::openFile()
 
 void Models::FileReader::FileReaderModel::processFile(const std::stop_token& stopToken)
 {
-    while (!stopToken.stop_requested()) {
-        QMetaObject::invokeMethod(this, &FileReaderModel::test, Qt::QueuedConnection);
+    using namespace std::chrono_literals;
+
+    m_currentModelSize = 0;
+    while (true) {
         std::unique_lock lock(m_fileMutex);
         m_allowReading.wait(lock, [this, &stopToken]() {
             return !m_stream.atEnd() || m_refilter || stopToken.stop_requested();
         });
 
+        if (stopToken.stop_requested()) {
+            return;
+        }
+
         QList<LogLine> items;
-        while (!stopToken.stop_requested()) {
-            // while (m_refilter && !stopToken.stop_requested()) {
-            //     m_refilter = false;
-            //     QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
+        QList<FilteredLogLine> filteredItems;
+        const auto startReadingPoint = std::chrono::steady_clock::now();
 
-            //     if (m_filter.isEmpty()) {
-            //         break;
-            //     }
+        while (true) {
+            if (stopToken.stop_requested()) {
+                return;
+            }
 
-            //     //Should not have any performance issues because QList is implicitly shared container meaning.
-            //     //Also provides safety mechanism in case if there for some reason will be a race condition.
-            //     QList<LogLine> data;
-            //     //Block to retreive full data
-            //     QMetaObject::invokeMethod(this, [this, &data]() {
-            //         return m_model.getRawData();
-            //     }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
+            while (m_refilter) {
+                if (stopToken.stop_requested()) {
+                    return;
+                }
 
-            //     for (int i = 0; i < data.size(); i++) {
-            //         if (m_refilter || stopToken.stop_requested() || startFromTheBeginningIfNeeded(false, Qt::QueuedConnection)) {
-            //             break;
-            //         }
-            //         //UI THREAD FREEZES
-            //         QMetaObject::invokeMethod(this, &FileReaderModel::pushToFilteredModel, Qt::QueuedConnection, data.at(i), i);
-            //     }
-            // }
+                m_refilter = false;
+                filteredItems.clear();
+                QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
+
+                if (m_filter.isEmpty()) {
+                    break;
+                }
+
+                //Should not have any performance issues because QList is implicitly shared container meaning.
+                //Also provides safety mechanism in case if there for some reason will be a race condition.
+                QList<LogLine> data;
+                //Block to retreive full data
+                QMetaObject::invokeMethod(this, [this, &data]() {
+                    return m_model.getRawData();
+                }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
+
+                for (int i = 0; i < data.size(); i++) {
+                    if (stopToken.stop_requested()) {
+                        return;
+                    }
+
+                    if (m_refilter) {
+                        break;
+                    }
+
+                    if (startFromTheBeginningIfNeeded(false, Qt::QueuedConnection)) {
+                        items.clear();
+                        filteredItems.clear();
+                        break;
+                    }
+
+                    const auto& text = data.at(i).text;
+                    if (isTextContainsFilter(text)) {
+                        filteredItems.push_back({text, false, i});
+                    }
+                }
+            }
 
             if (m_stream.atEnd()) {
                 break;
             }
 
-            startFromTheBeginningIfNeeded(false, Qt::QueuedConnection);
+            if (startFromTheBeginningIfNeeded(false, Qt::QueuedConnection)) {
+                items.clear();
+                filteredItems.clear();
+            };
+
             const auto text = m_stream.readLine();
             if (!text.isEmpty()) {
                 items.push_back({.text = text});
+                if (isTextContainsFilter(text)) {
+                    filteredItems.push_back({text, false, m_currentModelSize});
+                }
+                m_currentModelSize++;
             }
-            //QMetaObject::invokeMethod(this, &FileReaderModel::pushToModel, Qt::QueuedConnection, m_stream.readLine());
             m_fileSize = m_file.size();
+            if (std::chrono::steady_clock::now() - startReadingPoint > 1000ms) {
+                break;
+            }
         }
-        QMetaObject::invokeMethod(this, [this, items]() {
+
+        QMetaObject::invokeMethod(this, [this, items, filteredItems]() {
             m_model.pushBack(items);
+            m_filteredModel.pushBack(filteredItems);
         }, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, &FileReaderModel::test, Qt::QueuedConnection);
     }
 }
 
@@ -184,35 +229,16 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
         m_stream.seek(0);
         m_refilter = false;
         m_fileSize = m_file.size();
+        m_currentModelSize = 0;
         return true;
     }
     return false;
 }
 
-void Models::FileReader::FileReaderModel::pushToModel(const QString& text)
-{
-    if (!text.isEmpty()) {
-        const auto modelIndex = m_model.rowCount();
-        Models::FileReader::LogLine modelItem({.text = text});
-        m_model.insert(modelIndex, modelItem);
-        // if (!m_filter.isEmpty()) {
-        //     pushToFilteredModel(modelItem, modelIndex);
-        // }
-    }
-}
-
-void Models::FileReader::FileReaderModel::pushToFilteredModel(const LogLine& item, int originalIndex)
-{
-    QRegularExpression regExp(m_filter, QRegularExpression::CaseInsensitiveOption);
-    const auto text = item.text;
-    if (text.contains(regExp)) {
-        m_filteredModel.pushBack({text, false, originalIndex});
-    }
-}
-
 void Models::FileReader::FileReaderModel::releaseCurrentFile()
 {
     if (m_thread) {
+        qInfo() << "requestStop";
         m_thread->request_stop();
     }
     m_allowReading.notify_one();
@@ -227,6 +253,11 @@ void Models::FileReader::FileReaderModel::resetModel()
 void Models::FileReader::FileReaderModel::resetFilteredModel()
 {
     m_filteredModel.reset();
+}
+
+bool Models::FileReader::FileReaderModel::isTextContainsFilter(const QString &text)
+{
+    return !m_filter.isEmpty() && text.contains(QRegularExpression(m_filter, QRegularExpression::CaseInsensitiveOption));
 }
 
 template<typename DataType>

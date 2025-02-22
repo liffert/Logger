@@ -111,7 +111,6 @@ template<typename DataType>
 inline void ListModel<DataType>::pushBack(const QList<DataType>& dataList)
 {
     if (dataList.isEmpty()) {
-        qWarning() << __PRETTY_FUNCTION__ << " provided data list is empty";
         return;
     }
 

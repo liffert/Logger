@@ -66,11 +66,10 @@ private:
     void openFile();
     void processFile(const std::stop_token& stopToken);
     bool startFromTheBeginningIfNeeded(bool force, Qt::ConnectionType invocationType);
-    void pushToModel(const QString& text);
-    void pushToFilteredModel(const LogLine& item, int originalIndex);
     void releaseCurrentFile();
     void resetModel();
     void resetFilteredModel();
+    bool isTextContainsFilter(const QString& text);
 
     template<typename DataType>
     void copyToClipBoard(const Utility::Models::ListModel<DataType>& model) const;
@@ -96,6 +95,7 @@ private:
     std::atomic<bool> m_refilter = false;
 
     int m_fileSize = 0;
+    int m_currentModelSize = 0;
 };
 
 }
