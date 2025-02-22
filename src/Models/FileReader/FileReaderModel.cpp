@@ -59,6 +59,7 @@ void Models::FileReader::FileReaderModel::openFile()
 void Models::FileReader::FileReaderModel::processFile(const std::stop_token& stopToken)
 {
     while (!stopToken.stop_requested()) {
+        QMetaObject::invokeMethod(this, &FileReaderModel::test, Qt::QueuedConnection);
         std::unique_lock lock(m_fileMutex);
         m_allowReading.wait(lock, [this, &stopToken]() {
             return !m_stream.atEnd() || m_refilter || stopToken.stop_requested();
@@ -82,7 +83,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
 
                 for (int i = 0; i < data.size(); i++) {
-                    if (m_refilter || stopToken.stop_requested()) {
+                    if (m_refilter || stopToken.stop_requested() || startFromTheBeginningIfNeeded(false, Qt::QueuedConnection)) {
                         break;
                     }
                     //UI THREAD FREEZES
@@ -167,14 +168,17 @@ Utility::Models::ListModel<Models::FileReader::FilteredLogLine>* Models::FileRea
     return &m_filteredModel;
 }
 
-void Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force, Qt::ConnectionType invocationType)
+bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force, Qt::ConnectionType invocationType)
 {
     if (force || m_file.size() < m_fileSize) {
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, invocationType);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, invocationType);
         m_stream.seek(0);
+        m_refilter = false;
         m_fileSize = m_file.size();
+        return true;
     }
+    return false;
 }
 
 void Models::FileReader::FileReaderModel::pushToModel(const QString& text)

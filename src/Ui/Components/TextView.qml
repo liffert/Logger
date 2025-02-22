@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import Qt.labs.animation
 
 Item {
     id: root
@@ -30,6 +31,20 @@ Item {
             id: listView
             delegate: root.delegateComponent
             clip: true
+
+            //Make scrolling faster
+            WheelHandler {
+                target: listView
+                property: "contentY"
+                rotationScale: -5
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            }
+
+            BoundaryRule on contentY {
+                minimum: listView.originY
+                maximum: listView.originY + listView.contentHeight - listView.height
+                returnDuration: 0
+            }
         }
     }
 

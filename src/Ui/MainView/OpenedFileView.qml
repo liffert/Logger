@@ -142,6 +142,10 @@ SplitView {
 
     FileReaderModel {
         id: fileReaderModel
+        onTest: {
+            fullFileView.view.positionViewAtEnd();
+            filteredFileView.view.positionViewAtEnd();
+        }
     }
 
     QtObject {

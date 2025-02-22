@@ -60,11 +60,12 @@ public:
 signals:
     void filterChanged();
     void filePathChanged();
+    void test();
 
 private:
     void openFile();
     void processFile(const std::stop_token& stopToken);
-    void startFromTheBeginningIfNeeded(bool force, Qt::ConnectionType invocationType);
+    bool startFromTheBeginningIfNeeded(bool force, Qt::ConnectionType invocationType);
     void pushToModel(const QString& text);
     void pushToFilteredModel(const LogLine& item, int originalIndex);
     void releaseCurrentFile();
