@@ -19,6 +19,7 @@ public:
     void insert(int index, const DataType& data);
     void update(int index, const DataType& data);
     void pushBack(const DataType& data);
+    void pushBack(const QList<DataType>& dataList);
     void remove(int index);
     void remove(const DataType& data);
     void remove(const std::function<bool(const DataType&)>& comparator);
@@ -83,9 +84,9 @@ inline void ListModel<DataType>::insert(int index, const DataType& data)
         qWarning() << __PRETTY_FUNCTION__ << " incorrect index provided: " << index;
         return;
     }
-    emit beginInsertRows({}, index, index);
+    beginInsertRows({}, index, index);
     m_data.insert(index, data);
-    emit endInsertRows();
+    endInsertRows();
 }
 
 template<typename DataType>
@@ -107,15 +108,31 @@ inline void ListModel<DataType>::pushBack(const DataType& data)
 }
 
 template<typename DataType>
+inline void ListModel<DataType>::pushBack(const QList<DataType>& dataList)
+{
+    if (dataList.isEmpty()) {
+        qWarning() << __PRETTY_FUNCTION__ << " provided data list is empty";
+        return;
+    }
+
+    int startIndex = rowCount();
+    beginInsertRows({}, startIndex, startIndex + dataList.count() - 1);
+    for (const auto& data: dataList) {
+        m_data.push_back(data);
+    }
+    endInsertRows();
+}
+
+template<typename DataType>
 inline void ListModel<DataType>::remove(int index)
 {
     if (index < 0 || index >= m_data.size()) {
         qWarning() << __PRETTY_FUNCTION__ << " incorrect index provided: " << index;
         return;
     }
-    emit beginRemoveRows({}, index, index);
+    beginRemoveRows({}, index, index);
     m_data.remove(index);
-    emit endRemoveRows();
+    endRemoveRows();
 }
 
 template<typename DataType>
@@ -141,10 +158,10 @@ inline void ListModel<DataType>::remove(const std::function<bool(const DataType&
 template<typename DataType>
 inline void ListModel<DataType>::reset()
 {
-    emit beginResetModel();
+    beginResetModel();
     m_data.clear();
     m_selectionHelper.clear();
-    emit endResetModel();
+    endResetModel();
 }
 
 template<typename DataType>

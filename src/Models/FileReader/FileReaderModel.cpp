@@ -65,40 +65,48 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
             return !m_stream.atEnd() || m_refilter || stopToken.stop_requested();
         });
 
+        QList<LogLine> items;
         while (!stopToken.stop_requested()) {
-            while (m_refilter && !stopToken.stop_requested()) {
-                m_refilter = false;
-                QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
+            // while (m_refilter && !stopToken.stop_requested()) {
+            //     m_refilter = false;
+            //     QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
 
-                if (m_filter.isEmpty()) {
-                    break;
-                }
+            //     if (m_filter.isEmpty()) {
+            //         break;
+            //     }
 
-                //Should not have any performance issues because QList is implicitly shared container meaning.
-                //Also provides safety mechanism in case if there for some reason will be a race condition.
-                QList<LogLine> data;
-                //Block to retreive full data
-                QMetaObject::invokeMethod(this, [this, &data]() {
-                    return m_model.getRawData();
-                }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
+            //     //Should not have any performance issues because QList is implicitly shared container meaning.
+            //     //Also provides safety mechanism in case if there for some reason will be a race condition.
+            //     QList<LogLine> data;
+            //     //Block to retreive full data
+            //     QMetaObject::invokeMethod(this, [this, &data]() {
+            //         return m_model.getRawData();
+            //     }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
 
-                for (int i = 0; i < data.size(); i++) {
-                    if (m_refilter || stopToken.stop_requested() || startFromTheBeginningIfNeeded(false, Qt::QueuedConnection)) {
-                        break;
-                    }
-                    //UI THREAD FREEZES
-                    QMetaObject::invokeMethod(this, &FileReaderModel::pushToFilteredModel, Qt::QueuedConnection, data.at(i), i);
-                }
-            }
+            //     for (int i = 0; i < data.size(); i++) {
+            //         if (m_refilter || stopToken.stop_requested() || startFromTheBeginningIfNeeded(false, Qt::QueuedConnection)) {
+            //             break;
+            //         }
+            //         //UI THREAD FREEZES
+            //         QMetaObject::invokeMethod(this, &FileReaderModel::pushToFilteredModel, Qt::QueuedConnection, data.at(i), i);
+            //     }
+            // }
 
             if (m_stream.atEnd()) {
                 break;
             }
 
             startFromTheBeginningIfNeeded(false, Qt::QueuedConnection);
-            QMetaObject::invokeMethod(this, &FileReaderModel::pushToModel, Qt::QueuedConnection, m_stream.readLine());
+            const auto text = m_stream.readLine();
+            if (!text.isEmpty()) {
+                items.push_back({.text = text});
+            }
+            //QMetaObject::invokeMethod(this, &FileReaderModel::pushToModel, Qt::QueuedConnection, m_stream.readLine());
             m_fileSize = m_file.size();
         }
+        QMetaObject::invokeMethod(this, [this, items]() {
+            m_model.pushBack(items);
+        }, Qt::QueuedConnection);
     }
 }
 
@@ -187,9 +195,9 @@ void Models::FileReader::FileReaderModel::pushToModel(const QString& text)
         const auto modelIndex = m_model.rowCount();
         Models::FileReader::LogLine modelItem({.text = text});
         m_model.insert(modelIndex, modelItem);
-        if (!m_filter.isEmpty()) {
-            pushToFilteredModel(modelItem, modelIndex);
-        }
+        // if (!m_filter.isEmpty()) {
+        //     pushToFilteredModel(modelItem, modelIndex);
+        // }
     }
 }
 

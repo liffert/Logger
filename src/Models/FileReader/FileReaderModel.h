@@ -49,7 +49,7 @@ public:
     Q_INVOKABLE void selectAllFilteredItems();
     Q_INVOKABLE void deselectItems();
     Q_INVOKABLE void deselectFilteredItems();
-    //Move copy mechanism to separate thread?
+    //Move copy mechanism to separate thread? Check performance
     Q_INVOKABLE void copyToClipboardSelectedItems();
     Q_INVOKABLE void copyToClipboardSelectedFilteredItems();
     Q_INVOKABLE void copyAllItems();
