@@ -96,6 +96,7 @@ private:
     std::jthread m_thread;
     std::condition_variable m_allowReading;
     std::atomic<bool> m_refilter = false;
+    std::atomic<bool> m_threadFinished = false;
 
     int m_fileSize = 0;
     int m_currentModelSize = 0;

@@ -31,6 +31,11 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
 Models::FileReader::FileReaderModel::~FileReaderModel()
 {
     releaseCurrentFile();
+    //In case if thread stuck in blocking connection, process all events before this gets destroyed to exit from the thread properly.
+    while (!m_threadFinished) {
+        qInfo() << "AAAAAALAAAARM";
+        qApp->processEvents(QEventLoop::AllEvents);
+    }
 }
 
 void Models::FileReader::FileReaderModel::openFile(const QString& filePath)
@@ -47,12 +52,13 @@ void Models::FileReader::FileReaderModel::openFile(const QString& filePath)
     m_stream.setDevice(&m_file);
     startFromTheBeginningIfNeeded(true);
 
-    //Can lead to freeze with join in case if destruction happen before BlockingQueuedConnection unblock.
-    //Can lead to crash with detach if thread is not stopped in time.
-    //Use detach as freeze anyway will crash, so instant crash is not worse:D
-    //TODO: find a solution to not have crash
-    m_thread = std::jthread(&FileReaderModel::processFile, this);
-    m_thread.detach();
+    m_thread = std::jthread([this](const std::stop_token& stopToken) {
+        //Atomic flag looks quite ugly. Maybe to use std::packaged_task with std::future,
+        //but in general from performance perspective it will not be any better...
+        m_threadFinished = false;
+        processFile(stopToken);
+        m_threadFinished = true;
+    });
 }
 
 void Models::FileReader::FileReaderModel::processFile(const std::stop_token& stopToken)
@@ -63,12 +69,8 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     while (true) {
         std::unique_lock lock(m_fileMutex);
         m_allowReading.wait(lock, [this, &stopToken]() {
-            return !m_stream.atEnd() || m_refilter || stopToken.stop_requested();
+            return (m_file.isOpen() && !m_stream.atEnd()) || m_refilter || stopToken.stop_requested();
         });
-
-        if (stopToken.stop_requested()) {
-            return;
-        }
 
         QList<LogLine> items;
         QList<FilteredLogLine> filteredItems;
@@ -92,10 +94,11 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     break;
                 }
 
-                //Should not have any performance issues because QList is implicitly shared container meaning.
-                //Also provides safety mechanism in case if there for some reason will be a race condition.
-                QList<LogLine> data;
                 //Block to retreive full data
+                //No performance issues with using copying because QList is implicitly shared container. What is
+                //also provides safety mechanism in case if there for some reason will be a race condition and
+                //original data gets modified.
+                QList<LogLine> data;
                 QMetaObject::invokeMethod(this, [this, &data]() {
                     return m_model.getRawData();
                 }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
