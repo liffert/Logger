@@ -18,7 +18,7 @@ Item {
         fileDialog.open();
     }
 
-    //Add scroll area to make mouse friendly
+    //TODO: Add scroll area to make mouse friendly
     TabBar {
         id: tabBar
         anchors.left: root.left

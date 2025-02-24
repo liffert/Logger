@@ -10,17 +10,17 @@ Item {
 
     readonly property int contentWidth: root.childrenRect.width
 
-    //Maybe think of something better
+    //TODO: Maybe think of something better
     property int lineIndex: root.index
     property string text: ""
     property bool isSelected: false
     property color textColor: Qt.color("black")
 
     width: parent?.width ?? root.contentWidth
-    height: 20//Check some another way to be able to change fonts
+    height: 20//TODO: Check some another way to be able to change fonts
 
     onContentWidthChanged: {
-        //Not ideal as does not reset on the rewriting at the moment.
+        //TODO: Not ideal as does not reset on the rewriting at the moment.
         if (ListView.view.contentWidth < root.contentWidth) {
             ListView.view.contentWidth = root.contentWidth;
         }
@@ -30,7 +30,7 @@ Item {
         id: lineIndexItem
         anchors.top: root.top
         anchors.bottom: root.bottom
-        width: 100//ListView.view.count
+        width: 100//TODO: ListView.view.count
         color: "grey"
     }
 

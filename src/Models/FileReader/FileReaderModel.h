@@ -47,12 +47,14 @@ public:
     ~FileReaderModel();
 
     Q_INVOKABLE void updateItemSelection(int index, bool exclusive, bool value);
+    Q_INVOKABLE void updateItemsSelection(int startIndex, int endIndex, bool exclusive, bool value);
     Q_INVOKABLE void updateFilteredItemSelection(int index, bool exclusive, bool value);
+    Q_INVOKABLE void updateFilteredItemsSelection(int startIndex, int endIndex, bool exclusive, bool value);
     Q_INVOKABLE void selectAllItems();
     Q_INVOKABLE void selectAllFilteredItems();
     Q_INVOKABLE void deselectItems();
     Q_INVOKABLE void deselectFilteredItems();
-    //Move copy mechanism to separate thread? Check performance
+    //TODO: Move copy mechanism to separate thread? Check performance
     Q_INVOKABLE void copyToClipboardSelectedItems();
     Q_INVOKABLE void copyToClipboardSelectedFilteredItems();
     Q_INVOKABLE void copyAllItems();

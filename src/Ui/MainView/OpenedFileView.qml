@@ -46,7 +46,7 @@ SplitView {
 
         SplitView.fillWidth: true
         SplitView.fillHeight: true
-        SplitView.minimumHeight: 40//set to delegate height
+        SplitView.minimumHeight: 40//TODO: set to delegate height
 
         model: fileReaderModel.model
 
@@ -60,8 +60,8 @@ SplitView {
             textColor: delegate.modelData.color
         }
 
-        onUpdateItemSelection: function(index, value) {
-            fileReaderModel.updateItemSelection(index, false, value);
+        onUpdateItemsSelection: function(startIndex, endIndex, value) {
+            fileReaderModel.updateItemsSelection(startIndex, endIndex, false, value);
         }
 
         onItemSelected: function(item, exclusive) {
@@ -76,7 +76,7 @@ SplitView {
 
         SplitView.fillWidth: true
         SplitView.preferredHeight: 300
-        SplitView.minimumHeight: 40//Set to delegate height + filter height
+        SplitView.minimumHeight: 40//TODO: Set to delegate height + filter height
 
         Rectangle {
             color: "white"
@@ -123,8 +123,8 @@ SplitView {
                 textColor: delegate.modelData.color
             }
 
-            onUpdateItemSelection: function(index, value) {
-                fileReaderModel.updateFilteredItemSelection(index, false, value);
+            onUpdateItemsSelection: function(startIndex, endIndex, value) {
+                fileReaderModel.updateFilteredItemsSelection(startIndex, endIndex, false, value);
             }
 
             onItemSelected: function(item, exclusive) {

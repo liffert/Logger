@@ -163,9 +163,20 @@ void Models::FileReader::FileReaderModel::updateItemSelection(int index, bool ex
     m_model.updateSelection(index, exclusive, value);
 }
 
+void Models::FileReader::FileReaderModel::updateItemsSelection(int startIndex, int endIndex, bool exclusive, bool value)
+{
+    qInfo() << startIndex << " " << endIndex;
+    m_model.updateSelection(startIndex, endIndex, exclusive, value);
+}
+
 void Models::FileReader::FileReaderModel::updateFilteredItemSelection(int index, bool exclusive, bool value)
 {
     m_filteredModel.updateSelection(index, exclusive, value);
+}
+
+void Models::FileReader::FileReaderModel::updateFilteredItemsSelection(int startIndex, int endIndex, bool exclusive, bool value)
+{
+    m_filteredModel.updateSelection(startIndex, endIndex, exclusive, value);
 }
 
 void Models::FileReader::FileReaderModel::selectAllItems()
@@ -243,7 +254,7 @@ QColor Models::FileReader::FileReaderModel::getColor(const QString &text) const
     static const QList<QPair<QString, QColor>> patterns = {
                                                            {":RQ :", QColor(Qt::magenta)},
                                                            {":RP :", QColor(Qt::blue)},
-                                                           {":EV :", QColor(Qt::darkCyan)},//Cyan in old view app, but really hard to read, so maybe dark cyan is better
+                                                           {":EV :", QColor(Qt::darkCyan)},//TODO: Cyan in old view app, but really hard to read, so maybe dark cyan is better
                                                            {"WARN", QColor(QColorConstants::Svg::orange)},
                                                            {"CRIT", QColor(Qt::red)},
                                                            {"FATAL", QColor(Qt::darkRed)},

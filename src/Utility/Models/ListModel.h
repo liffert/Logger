@@ -25,6 +25,7 @@ public:
     void remove(const std::function<bool(const DataType&)>& comparator);
     void reset();
     void updateSelection(int index, bool exclusive, bool value);
+    void updateSelection(int startIndex, int endIndex, bool exclusive, bool value);
     void resetSelection();
     const QList<DataType>& getRawData() const;
     const std::set<int>& getSelection() const;
@@ -185,6 +186,44 @@ inline void ListModel<DataType>::updateSelection(int index, bool exclusive, bool
         }
         update(index, item);
     }
+}
+
+template<typename DataType>
+inline void ListModel<DataType>::updateSelection(int startIndex, int endIndex, bool exclusive, bool value)
+{
+    if (startIndex < 0 || startIndex >= m_data.size() || endIndex < 0 || endIndex >= m_data.size()) {
+        qWarning() << __PRETTY_FUNCTION__ << " some index is out of bounds " << startIndex << " " << endIndex;
+        return;
+    }
+
+    if (exclusive) {
+        resetSelection();
+    }
+
+    int from = 0;
+    int to = 0;
+
+    if (startIndex <= endIndex) {
+        from = startIndex;
+        to = endIndex;
+    } else {
+        from = endIndex;
+        to = startIndex;
+    }
+
+    qInfo() << from << " " << to;
+    for (int i = from; i <= to; i++) {
+        auto& item = m_data[i];
+        if (item.selected != value) {
+            item.selected = value;
+            if (item.selected) {
+                m_selectionHelper.insert(i);
+            } else {
+                m_selectionHelper.erase(i);
+            }
+        }
+    }
+    emit dataChanged(ListModel::index(from), ListModel::index(to));
 }
 
 template<typename DataType>

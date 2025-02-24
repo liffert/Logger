@@ -14,7 +14,7 @@ Item {
 
     property Component delegateComponent: null
 
-    signal updateItemSelection(var index, var value)
+    signal updateItemsSelection(var startIndex, var endIndex, var value)
     signal itemSelected(var item, var exclusive)
     signal itemDoubleClicked(var item, var exclusive)
 
@@ -34,7 +34,7 @@ Item {
             flickableDirection: Flickable.AutoFlickDirection
 
             //Make scrolling faster.
-            //Add settings for each scrolling speed.
+            //TODO: Add settings for each scrolling speed.
             WheelHandler {
                 target: listView
                 property: "contentY"
@@ -85,19 +85,27 @@ Item {
                 if (Boolean(itemUnderMouse)) {
                     const itemUnderMouseIndex = itemUnderMouse.index;
                     if (mouseArea.lastMultiselectionIndex !== itemUnderMouseIndex) {
+                        const isCurrentDirectionDown = itemUnderMouseIndex > mouseArea.lastMultiselectionIndex;
                         if (mouseArea.lastMultiselectionIndex !== mouseArea.firstMultiselectionIndex) {
                             const isInitialDirectionDown = (mouseArea.firstMultiselectionIndex - mouseArea.lastMultiselectionIndex) < 0;
-                            const isCurrentDirectionDown = itemUnderMouseIndex > mouseArea.lastMultiselectionIndex;
 
                             if (isInitialDirectionDown) {
                                 if (!isCurrentDirectionDown) {
-                                    root.updateItemSelection(mouseArea.lastMultiselectionIndex, false);
+                                    const endIndex = Math.max(mouseArea.firstMultiselectionIndex, itemUnderMouseIndex) + 1;
+                                    root.updateItemsSelection(mouseArea.lastMultiselectionIndex, endIndex, false);
+                                    mouseArea.lastMultiselectionIndex = endIndex;
                                 }
                             } else if (isCurrentDirectionDown) {
-                                root.updateItemSelection(mouseArea.lastMultiselectionIndex, false)
+                                const endIndex = Math.min(mouseArea.firstMultiselectionIndex, itemUnderMouseIndex) - 1;
+                                root.updateItemsSelection(mouseArea.lastMultiselectionIndex, endIndex, false);
+                                mouseArea.lastMultiselectionIndex = endIndex;
                             }
                         }
-                        root.updateItemSelection(itemUnderMouseIndex, true);
+
+                        const startIndex = mouseArea.lastMultiselectionIndex >= 0 ? (mouseArea.lastMultiselectionIndex + (isCurrentDirectionDown ? 1 : -1))
+                                                                                  : itemUnderMouseIndex;
+
+                        root.updateItemsSelection(startIndex, itemUnderMouseIndex, true);
                         mouseArea.lastMultiselectionIndex = itemUnderMouseIndex;
                     }
                 }
@@ -132,7 +140,7 @@ Item {
             enabled: mouseArea.lastMultiselectionIndex !== -1
             function onListViewPositionChanged() {
                 if (mouseArea.lastMultiselectionIndex !== -1) {
-                    mouseArea.checkMultiselection();
+                    Qt.callLater(mouseArea.checkMultiselection);//TODO: Check if fine for performance to update that often
                 }
             }
         }
