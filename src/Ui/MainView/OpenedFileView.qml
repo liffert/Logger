@@ -13,7 +13,9 @@ SplitView {
 
     orientation: Qt.Vertical
 
-    property alias filePath: fileReaderModel.filePath
+    function openFile(path) {
+        fileReaderModel.openFile(path);
+    }
 
     function copy(copyAll) {
         if (copyAll) {

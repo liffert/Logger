@@ -38,8 +38,6 @@ Item {
 
                 required property var modelData
 
-                filePath: modelData.path
-
                 Connections {
                     target: copyShortcut
                     function onActivated() {
@@ -75,6 +73,8 @@ Item {
                         }
                     }
                 }
+
+                Component.onCompleted: openedFileView.openFile(openedFileView.modelData.path)
             }
         }
     }

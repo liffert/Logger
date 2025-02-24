@@ -11,7 +11,7 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_file.fileName()) {
             if (m_fileMutex.try_lock()) {
-                startFromTheBeginningIfNeeded(false, Qt::QueuedConnection);
+                startFromTheBeginningIfNeeded(false);
                 m_fileMutex.unlock();
             }
             m_allowReading.notify_one();
@@ -26,8 +26,6 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
             }
         }
     });
-
-    connect(this, &FileReaderModel::filePathChanged, this, &FileReaderModel::openFile);
 }
 
 Models::FileReader::FileReaderModel::~FileReaderModel()
@@ -35,25 +33,26 @@ Models::FileReader::FileReaderModel::~FileReaderModel()
     releaseCurrentFile();
 }
 
-void Models::FileReader::FileReaderModel::openFile()
+void Models::FileReader::FileReaderModel::openFile(const QString& filePath)
 {
-    qInfo() << __PRETTY_FUNCTION__ << " " << m_filePath;
-    if (m_file.isOpen()) {
-        releaseCurrentFile();
-    }
-
-    if (m_filePath.isEmpty()) {
+    qInfo() << __PRETTY_FUNCTION__ << " " << filePath;
+    if (filePath.isEmpty()) {
         qInfo() << __PRETTY_FUNCTION__ << " file path is empty";
         return;
     }
 
-    m_file.setFileName(m_filePath);
+    m_file.setFileName(filePath);
     m_file.open(QIODevice::ReadOnly);
 
     m_stream.setDevice(&m_file);
-    startFromTheBeginningIfNeeded(true, Qt::DirectConnection);
+    startFromTheBeginningIfNeeded(true);
 
-    m_thread = std::make_unique<std::jthread>(&FileReaderModel::processFile, this);
+    //Can lead to freeze with join in case if destruction happen before BlockingQueuedConnection unblock.
+    //Can lead to crash with detach if thread is not stopped in time.
+    //Use detach as freeze anyway will crash, so instant crash is not worse:D
+    //TODO: find a solution to not have crash
+    m_thread = std::jthread(&FileReaderModel::processFile, this);
+    m_thread.detach();
 }
 
 void Models::FileReader::FileReaderModel::processFile(const std::stop_token& stopToken)
@@ -110,7 +109,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                         break;
                     }
 
-                    if (startFromTheBeginningIfNeeded(false, Qt::QueuedConnection)) {
+                    if (startFromTheBeginningIfNeeded(false)) {
                         items.clear();
                         filteredItems.clear();
                         break;
@@ -127,7 +126,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 break;
             }
 
-            if (startFromTheBeginningIfNeeded(false, Qt::QueuedConnection)) {
+            if (startFromTheBeginningIfNeeded(false)) {
                 items.clear();
                 filteredItems.clear();
             };
@@ -220,11 +219,11 @@ Utility::Models::ListModel<Models::FileReader::FilteredLogLine>* Models::FileRea
     return &m_filteredModel;
 }
 
-bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force, Qt::ConnectionType invocationType)
+bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force)
 {
     if (force || m_file.size() < m_fileSize) {
-        QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, invocationType);
-        QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, invocationType);
+        QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         m_stream.seek(0);
         m_refilter = false;
         m_fileSize = m_file.size();
@@ -236,9 +235,7 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
 
 void Models::FileReader::FileReaderModel::releaseCurrentFile()
 {
-    if (m_thread) {
-        m_thread->request_stop();
-    }
+    m_thread.request_stop();
     m_allowReading.notify_one();
     m_file.close();
 }
