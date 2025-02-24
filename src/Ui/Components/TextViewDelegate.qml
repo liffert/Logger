@@ -27,11 +27,22 @@ Item {
     }
 
     Rectangle {
-        id: lineIndexItem
+        id: lineIndexItemBackground
+        anchors.left: root.left
         anchors.top: root.top
         anchors.bottom: root.bottom
         width: 100//TODO: ListView.view.count
         color: "grey"
+    }
+
+    Rectangle {
+        id: cutSymbolsTextBackground
+        anchors.right: cutSymbolsText.right
+        anchors.left: textItem.right
+        anchors.top: root.top
+        anchors.bottom: root.bottom
+        color: "grey"
+        visible: cutSymbolsText.visible
     }
 
     Rectangle {
@@ -48,7 +59,8 @@ Item {
     Text {
         id: lineIndexItemText
         text: root.lineIndex
-        anchors.right: lineIndexItem.right
+        textFormat: Text.PlainText
+        anchors.right: lineIndexItemBackground.right
         anchors.rightMargin: 10
         anchors.verticalCenter: root.verticalCenter
         color: "white"
@@ -57,11 +69,22 @@ Item {
     Text {
         id: textItem
         anchors.verticalCenter: root.verticalCenter
-        anchors.left: lineIndexItem.right
+        anchors.left: lineIndexItemBackground.right
         anchors.leftMargin: 10
         anchors.rightMargin: 10
-        text: root.text
+        text: root.text.length > 2000 ? root.text.substring(0, 2000) : root.text
+        textFormat: Text.PlainText
         color: root.textColor
+    }
+
+    //TODO: Need to cut somethow by width, not by symbols
+    Text {
+        id: cutSymbolsText
+        anchors.left: textItem.right
+        anchors.verticalCenter: cutSymbolsTextBackground.verticalCenter
+        text: " +%1 cut symbols".arg(root.text.length - 2000)
+        visible: root.text.length > 2000
+        color: "white"
     }
 
     states: [

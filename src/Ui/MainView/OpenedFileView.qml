@@ -51,13 +51,13 @@ SplitView {
         model: fileReaderModel.model
 
         delegateComponent: TextViewDelegate {
-            id: delegate
+            id: fullFileViewDelegate
 
             required property var modelData
 
-            text: delegate.modelData.text
-            isSelected: delegate.modelData.selected
-            textColor: delegate.modelData.color
+            text: fullFileViewDelegate.modelData.text
+            isSelected: fullFileViewDelegate.modelData.selected
+            textColor: fullFileViewDelegate.modelData.color
         }
 
         onUpdateItemsSelection: function(startIndex, endIndex, value) {
@@ -113,14 +113,14 @@ SplitView {
             model: fileReaderModel.filteredModel
 
             delegateComponent: TextViewDelegate {
-                id: delegate
+                id: filteredFileViewDelegate
 
                 required property var modelData
 
-                text: delegate.modelData.text
-                isSelected: delegate.modelData.selected
-                lineIndex: delegate.modelData.originalIndex
-                textColor: delegate.modelData.color
+                text: filteredFileViewDelegate.modelData.text
+                isSelected: filteredFileViewDelegate.modelData.selected
+                lineIndex: filteredFileViewDelegate.modelData.originalIndex
+                textColor: filteredFileViewDelegate.modelData.color
             }
 
             onUpdateItemsSelection: function(startIndex, endIndex, value) {

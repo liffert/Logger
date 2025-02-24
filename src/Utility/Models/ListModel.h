@@ -211,7 +211,6 @@ inline void ListModel<DataType>::updateSelection(int startIndex, int endIndex, b
         to = startIndex;
     }
 
-    qInfo() << from << " " << to;
     for (int i = from; i <= to; i++) {
         auto& item = m_data[i];
         if (item.selected != value) {
