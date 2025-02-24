@@ -243,8 +243,8 @@ QColor Models::FileReader::FileReaderModel::getColor(const QString &text) const
     static const QList<QPair<QString, QColor>> patterns = {
                                                            {":RQ :", QColor(Qt::magenta)},
                                                            {":RP :", QColor(Qt::blue)},
-                                                           {":EV :", QColor(Qt::cyan)},\
-                                                           {"WARN", QColor(Qt::darkYellow)},//to change to orange
+                                                           {":EV :", QColor(Qt::darkCyan)},//Cyan in old view app, but really hard to read, so maybe dark cyan is better
+                                                           {"WARN", QColor(QColorConstants::Svg::orange)},
                                                            {"CRIT", QColor(Qt::red)},
                                                            {"FATAL", QColor(Qt::darkRed)},
                                                            {"MYLOG", QColor(Qt::darkGreen)},
@@ -264,6 +264,7 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
     m_thread.request_stop();
     m_allowReading.notify_one();
     //In case if thread stuck in blocking connection, process all events before this gets destroyed to exit from the thread properly.
+    //Consired to use AllEvents to make sure that UI is not frozen if it takes too long to die. But as far as it should not, keep it like this for now.
     while (!m_threadFinished) {
         qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
     }
