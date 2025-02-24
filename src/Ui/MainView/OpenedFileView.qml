@@ -59,6 +59,7 @@ SplitView {
 
             text: delegate.modelData.text
             isSelected: delegate.modelData.selected
+            textColor: delegate.modelData.color
         }
 
         onUpdateItemSelection: function(index, value) {
@@ -121,6 +122,7 @@ SplitView {
                 text: delegate.modelData.text
                 isSelected: delegate.modelData.selected
                 lineIndex: delegate.modelData.originalIndex
+                textColor: delegate.modelData.color
             }
 
             onUpdateItemSelection: function(index, value) {

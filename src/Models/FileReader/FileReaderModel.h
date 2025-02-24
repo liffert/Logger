@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QFile>
+#include <QColor>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
@@ -14,17 +15,19 @@ namespace Models::FileReader {
 
 struct LogLine {
     Q_GADGET
-    Q_PROPERTY(QString text MEMBER text FINAL CONSTANT)
-    Q_PROPERTY(bool selected MEMBER selected FINAL CONSTANT)
+    Q_PROPERTY(QString text MEMBER text CONSTANT)
+    Q_PROPERTY(bool selected MEMBER selected CONSTANT)
+    Q_PROPERTY(QColor color MEMBER color CONSTANT)
 
 public:
     QString text;
     bool selected = false;
+    QColor color = QColor(Qt::black);
 };
 
 struct FilteredLogLine : public LogLine {
     Q_GADGET
-    Q_PROPERTY(int originalIndex MEMBER originalIndex FINAL CONSTANT)
+    Q_PROPERTY(int originalIndex MEMBER originalIndex CONSTANT)
 
 public:
     int originalIndex;

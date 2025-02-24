@@ -14,6 +14,7 @@ Item {
     property int lineIndex: root.index
     property string text: ""
     property bool isSelected: false
+    property color textColor: Qt.color("black")
 
     width: parent?.width ?? root.contentWidth
     height: 20//Check some another way to be able to change fonts
@@ -60,6 +61,7 @@ Item {
         anchors.leftMargin: 10
         anchors.rightMargin: 10
         text: root.text
+        color: root.textColor
     }
 
     states: [

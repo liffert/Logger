@@ -133,9 +133,10 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
             const auto text = m_stream.readLine();
             if (!text.isEmpty()) {
+                const LogLine item = {.text = text};
                 items.push_back({.text = text});
                 if (isTextContainsFilter(text)) {
-                    filteredItems.push_back({text, false, m_currentModelSize});
+                    filteredItems.push_back({text, false, item.color, m_currentModelSize});
                 }
                 m_currentModelSize++;
             }
