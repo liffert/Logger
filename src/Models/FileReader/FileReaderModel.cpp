@@ -133,10 +133,10 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
             const auto text = m_stream.readLine();
             if (!text.isEmpty()) {
-                const LogLine item = {.text = text};
-                items.push_back({.text = text});
+                const auto color = getColor(text);
+                items.push_back({.text = text, .color = color});
                 if (isTextContainsFilter(text)) {
-                    filteredItems.push_back({text, false, item.color, m_currentModelSize});
+                    filteredItems.push_back({text, false, color, m_currentModelSize});
                 }
                 m_currentModelSize++;
             }
@@ -232,6 +232,27 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
         return true;
     }
     return false;
+}
+
+QColor Models::FileReader::FileReaderModel::getColor(const QString &text) const
+{
+    static const QList<QPair<QString, QColor>> patterns = {
+                                                           {":RQ :", QColor(Qt::magenta)},
+                                                           {":RP :", QColor(Qt::blue)},
+                                                           {":EV :", QColor(Qt::cyan)},\
+                                                           {"WARN", QColor(Qt::darkYellow)},//to change to orange
+                                                           {"CRIT", QColor(Qt::red)},
+                                                           {"FATAL", QColor(Qt::darkRed)},
+                                                           {"MYLOG", QColor(Qt::darkGreen)},
+                                                           {"if1verbose", QColor(Qt::darkBlue)}
+    };
+
+    for (const auto& pattern : patterns) {
+        if (text.contains(QRegularExpression(pattern.first, QRegularExpression::CaseInsensitiveOption))) {
+            return pattern.second;
+        }
+    }
+    return {Qt::black};
 }
 
 void Models::FileReader::FileReaderModel::releaseCurrentFile()

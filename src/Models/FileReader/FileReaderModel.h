@@ -22,7 +22,7 @@ struct LogLine {
 public:
     QString text;
     bool selected = false;
-    QColor color = QColor(Qt::black);
+    QColor color = {Qt::black};
 };
 
 struct FilteredLogLine : public LogLine {
@@ -67,11 +67,12 @@ signals:
 
 private:
     void processFile(const std::stop_token& stopToken);
-    bool startFromTheBeginningIfNeeded(bool force);
     void releaseCurrentFile();
     void resetModel();
     void resetFilteredModel();
     bool isTextContainsFilter(const QString& text);
+    bool startFromTheBeginningIfNeeded(bool force);
+    QColor getColor(const QString& text) const;
 
     template<typename DataType>
     void copyToClipBoard(const Utility::Models::ListModel<DataType>& model) const;
