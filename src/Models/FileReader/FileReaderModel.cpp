@@ -26,37 +26,38 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
             }
         }
     });
+
+    connect(this, &FileReaderModel::filePathChanged, this, &FileReaderModel::openFile);
 }
 
 Models::FileReader::FileReaderModel::~FileReaderModel()
 {
     releaseCurrentFile();
-    //In case if thread stuck in blocking connection, process all events before this gets destroyed to exit from the thread properly.
-    while (!m_threadFinished) {
-        qInfo() << "AAAAAALAAAARM";
-        qApp->processEvents(QEventLoop::AllEvents);
-    }
 }
 
-void Models::FileReader::FileReaderModel::openFile(const QString& filePath)
+void Models::FileReader::FileReaderModel::openFile()
 {
-    qInfo() << __PRETTY_FUNCTION__ << " " << filePath;
-    if (filePath.isEmpty()) {
+    qInfo() << __PRETTY_FUNCTION__ << " " << m_filePath;
+    if (!m_threadFinished) {
+        releaseCurrentFile();
+    }
+
+    if (m_filePath.isEmpty()) {
         qInfo() << __PRETTY_FUNCTION__ << " file path is empty";
         return;
     }
 
-    m_file.setFileName(filePath);
+    m_file.setFileName(m_filePath);
     m_file.open(QIODevice::ReadOnly);
 
     m_stream.setDevice(&m_file);
     startFromTheBeginningIfNeeded(true);
 
+    m_threadFinished = false;
     m_thread = std::jthread([this](const std::stop_token& stopToken) {
+        processFile(stopToken);
         //Atomic flag looks quite ugly. Maybe to use std::packaged_task with std::future,
         //but in general from performance perspective it will not be any better...
-        m_threadFinished = false;
-        processFile(stopToken);
         m_threadFinished = true;
     });
 }
@@ -262,6 +263,10 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
 {
     m_thread.request_stop();
     m_allowReading.notify_one();
+    //In case if thread stuck in blocking connection, process all events before this gets destroyed to exit from the thread properly.
+    while (!m_threadFinished) {
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+    }
     m_file.close();
 }
 

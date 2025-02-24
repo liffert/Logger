@@ -40,12 +40,12 @@ class FileReaderModel : public QObject {
     Q_PROPERTY(Utility::Models::ListModel<LogLine> *model READ model() CONSTANT)
     Q_PROPERTY(Utility::Models::ListModel<FilteredLogLine> *filteredModel READ filteredModel() CONSTANT)
     Q_PROPERTY(QString filter MEMBER m_filter NOTIFY filterChanged)
+    Q_PROPERTY(QString filePath MEMBER m_filePath NOTIFY filePathChanged)
 
 public:
     FileReaderModel(QObject* parent = nullptr);
     ~FileReaderModel();
 
-    Q_INVOKABLE void openFile(const QString& filePath);
     Q_INVOKABLE void updateItemSelection(int index, bool exclusive, bool value);
     Q_INVOKABLE void updateFilteredItemSelection(int index, bool exclusive, bool value);
     Q_INVOKABLE void selectAllItems();
@@ -66,6 +66,7 @@ signals:
     void itemsAdded();
 
 private:
+    void openFile();
     void processFile(const std::stop_token& stopToken);
     void releaseCurrentFile();
     void resetModel();
@@ -91,12 +92,13 @@ private:
     Utility::Models::ListModel<FilteredLogLine> m_filteredModel;
     QString m_filter;
     QString m_filePath;
+    QString m_fileName;
 
     std::mutex m_fileMutex;
     std::jthread m_thread;
     std::condition_variable m_allowReading;
     std::atomic<bool> m_refilter = false;
-    std::atomic<bool> m_threadFinished = false;
+    std::atomic<bool> m_threadFinished = true;
 
     int m_fileSize = 0;
     int m_currentModelSize = 0;
