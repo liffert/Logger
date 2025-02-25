@@ -119,9 +119,10 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                         break;
                     }
 
-                    const auto& text = data.at(i).text;
+                    const auto& item = data.at(i);
+                    const auto& text = item.text;
                     if (isTextContainsFilter(text)) {
-                        filteredItems.push_back({text, false, i});
+                        filteredItems.push_back({text, false, item.color, i});
                     }
                 }
             }

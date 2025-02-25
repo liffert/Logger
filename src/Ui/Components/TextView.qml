@@ -10,7 +10,6 @@ Item {
     readonly property alias view: listView
 
     property alias model: listView.model
-    property alias effectiveScrollBarWidth: scrollView.effectiveScrollBarWidth
 
     property Component delegateComponent: null
 
@@ -18,56 +17,70 @@ Item {
     signal itemSelected(var item, var exclusive)
     signal itemDoubleClicked(var item, var exclusive)
 
-    ScrollView {
-        id: scrollView
+    Rectangle {
+        anchors.fill: parent
+        color: "grey"
+    }
+
+    ListView {
+        id: listView
         anchors.fill: root
+        anchors.rightMargin: listView.ScrollBar.vertical.width
+        anchors.bottomMargin: listView.ScrollBar.horizontal.height
+        clip: true
+        flickableDirection: Flickable.AutoFlickDirection
+        delegate: root.delegateComponent
 
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
-        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-        contentHeight: listView.contentHeight
-        contentWidth: listView.contentWidth
+        //Make scrolling faster.
+        //TODO: Add settings for each scrolling speed.
+        WheelHandler {
+            target: listView
+            property: "contentY"
+            rotationScale: -1
+            orientation: Qt.Vertical
+        }
 
-        ListView {
-            id: listView
-            delegate: root.delegateComponent
-            clip: true
-            flickableDirection: Flickable.AutoFlickDirection
+        WheelHandler {
+            target: listView
+            property: "contentX"
+            rotationScale: -1
+            orientation: Qt.Horizontal
+        }
 
-            //Make scrolling faster.
-            //TODO: Add settings for each scrolling speed.
-            WheelHandler {
-                target: listView
-                property: "contentY"
-                rotationScale: -5
-                orientation: Qt.Vertical
-            }
+        BoundaryRule on contentY {
+            minimum: listView.originY
+            maximum: listView.originY + Math.max(listView.height, listView.contentHeight) - listView.height
+            returnDuration: 0
+        }
 
-            WheelHandler {
-                target: listView
-                property: "contentX"
-                rotationScale: -5
-                orientation: Qt.Horizontal
-            }
+        BoundaryRule on contentX {
+            minimum: listView.originX
+            maximum: listView.originX + Math.max(listView.width, listView.contentWidth) - listView.width
+            returnDuration: 0
+        }
 
-            BoundaryRule on contentY {
-                minimum: listView.originY
-                maximum: listView.originY + listView.contentHeight - listView.height
-                returnDuration: 0
-            }
+        ScrollBar.vertical: ScrollBar {
+            parent: listView.parent
+            anchors.top: listView.top
+            anchors.bottom: listView.bottom
+            anchors.left: listView.right
+            policy: ScrollBar.AlwaysOn
+        }
 
-            BoundaryRule on contentX {
-                minimum: listView.originX
-                maximum: listView.originX + listView.contentWidth - listView.width
-                returnDuration: 0
-            }
+        ScrollBar.horizontal: ScrollBar {
+            parent: listView.parent
+            anchors.top: listView.bottom
+            anchors.left: listView.left
+            anchors.right: listView.right
+            policy: ScrollBar.AlwaysOn
         }
     }
 
     MouseArea {
         id: mouseArea
-        anchors.fill: scrollView
-        anchors.rightMargin: scrollView.effectiveScrollBarWidth
-        anchors.bottomMargin: scrollView.effectiveScrollBarHeight
+        anchors.fill: listView
+        anchors.rightMargin: listView.ScrollBar.vertical.width
+        anchors.bottomMargin: listView.ScrollBar.horizontal.height
 
         readonly property int defaultX: mouseArea.width / 2
 

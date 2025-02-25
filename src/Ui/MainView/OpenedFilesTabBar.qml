@@ -43,6 +43,7 @@ Item {
                     anchors.right: openedFilesTabDelegate.right
                     anchors.top: openedFilesTabDelegate.top
                     anchors.bottom: openedFilesTabDelegate.bottom
+                    width: 20
                     onClicked: FileSystemWatcher.stopWatchingFile(openedFilesTabDelegate.index)
                 }
             }

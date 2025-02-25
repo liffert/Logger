@@ -16,14 +16,20 @@ Item {
     property bool isSelected: false
     property color textColor: Qt.color("black")
 
-    width: parent?.width ?? root.width
-    height: 20//TODO: Check some another way to be able to change fonts
+    width: ListView.view.width
+    height: Math.max(textItem.height, 20)
 
     onContentWidthChanged: {
         //TODO: Not ideal as does not reset on the rewriting at the moment.
         if (ListView.view.contentWidth < root.contentWidth) {
             ListView.view.contentWidth = root.contentWidth;
         }
+    }
+
+    Rectangle {
+        id: background
+        anchors.fill: root
+        color: "white"
     }
 
     Rectangle {
