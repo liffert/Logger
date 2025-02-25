@@ -36,16 +36,6 @@ Item {
     }
 
     Rectangle {
-        id: cutSymbolsTextBackground
-        anchors.right: cutSymbolsText.right
-        anchors.left: textItem.right
-        anchors.top: root.top
-        anchors.bottom: root.bottom
-        color: "grey"
-        visible: cutSymbolsText.visible
-    }
-
-    Rectangle {
         id: hightlight
         anchors.top: root.top
         anchors.bottom: root.bottom
@@ -66,25 +56,16 @@ Item {
         color: "white"
     }
 
-    Text {
+    //TextInput can render instantly text which regular Text item renders within 800ms+
+    TextInput {
         id: textItem
         anchors.verticalCenter: root.verticalCenter
         anchors.left: lineIndexItemBackground.right
         anchors.leftMargin: 10
         anchors.rightMargin: 10
-        text: root.text.length > 2000 ? root.text.substring(0, 2000) : root.text
-        textFormat: Text.PlainText
+        text: root.text
+        readOnly: true
         color: root.textColor
-    }
-
-    //TODO: Need to cut somethow by width, not by symbols
-    Text {
-        id: cutSymbolsText
-        anchors.left: textItem.right
-        anchors.verticalCenter: cutSymbolsTextBackground.verticalCenter
-        text: " +%1 cut symbols".arg(root.text.length - 2000)
-        visible: root.text.length > 2000
-        color: "white"
     }
 
     states: [
