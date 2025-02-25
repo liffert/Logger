@@ -8,7 +8,7 @@ Item {
 
     required property int index
 
-    readonly property int contentPrefferedWidth: Math.max(ListView.view.width, root.childrenRect.width)
+    readonly property int contentPrefferedWidth: Math.max(ListView.view.width, lineIndexItemBackground.width + textItem.width + textItem.anchors.leftMargin)
 
     //TODO: Maybe think of something better
     property int lineIndex: root.index
@@ -70,7 +70,6 @@ Item {
         anchors.verticalCenter: root.verticalCenter
         anchors.left: lineIndexItemBackground.right
         anchors.leftMargin: 10
-        anchors.rightMargin: 10
         text: root.text
         readOnly: true
         color: root.textColor

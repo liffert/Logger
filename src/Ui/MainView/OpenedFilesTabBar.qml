@@ -47,6 +47,8 @@ Item {
                     onClicked: FileSystemWatcher.stopWatchingFile(openedFilesTabDelegate.index)
                 }
             }
+
+            onItemAdded: tabBar.currentIndex = openedFilesRepeater.count - 1
         }
     }
 

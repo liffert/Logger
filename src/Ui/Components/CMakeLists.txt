@@ -5,4 +5,5 @@ qt_add_qml_module(Ui_Components
     QML_FILES
         TextView.qml
         TextViewDelegate.qml
+        TextViewToolbar.qml
 )

@@ -42,6 +42,7 @@ Item {
 
                 Connections {
                     target: copyShortcut
+                    enabled: openedFileView.StackLayout.isCurrentItem
                     function onActivated() {
                         if (openedFileView.StackLayout.isCurrentItem) {
                             openedFileView.copy(false);
@@ -51,6 +52,7 @@ Item {
 
                 Connections {
                     target: copyAllShortcut
+                    enabled: openedFileView.StackLayout.isCurrentItem
                     function onActivated() {
                         if (openedFileView.StackLayout.isCurrentItem) {
                             openedFileView.copy(true);
@@ -60,6 +62,7 @@ Item {
 
                 Connections {
                     target: deselectShortcut
+                    enabled: openedFileView.StackLayout.isCurrentItem
                     function onActivated() {
                         if (openedFileView.StackLayout.isCurrentItem) {
                             openedFileView.deselect();
@@ -69,9 +72,20 @@ Item {
 
                 Connections {
                     target: selectAllShortcut
+                    enabled: openedFileView.StackLayout.isCurrentItem
                     function onActivated() {
                         if (openedFileView.StackLayout.isCurrentItem) {
                             openedFileView.selectAll();
+                        }
+                    }
+                }
+
+                Connections {
+                    target: autoScroll
+                    enabled: openedFileView.StackLayout.isCurrentItem
+                    function onActivated() {
+                        if (openedFileView.StackLayout.isCurrentItem) {
+                            openedFileView.toggleAutoScroll();
                         }
                     }
                 }
@@ -117,5 +131,11 @@ Item {
         id: deselectShortcut
         context: Qt.ApplicationShortcut
         sequence: "Esc"
+    }
+
+    Shortcut {
+        id: autoScroll
+        context: Qt.ApplicationShortcut
+        sequence: "F"
     }
 }

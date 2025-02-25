@@ -10,6 +10,7 @@ Item {
     readonly property alias view: listView
 
     property alias model: listView.model
+    property alias toolbar: toolbar
 
     property Component delegateComponent: null
 
@@ -19,13 +20,29 @@ Item {
 
     //TODO: design check
     Rectangle {
-        anchors.fill: parent
+        anchors.fill: root
         color: "grey"
+    }
+
+    TextViewToolbar {
+        id: toolbar
+        anchors.left: root.left
+        anchors.right: root.right
+        anchors.top: root.top
+
+        onAutoScrollEnabledChanged: {
+            if (toolbar.autoScrollEnabled) {
+                listView.positionViewAtEnd()
+            }
+        }
     }
 
     ListView {
         id: listView
-        anchors.fill: root
+        anchors.left: root.left
+        anchors.right: root.right
+        anchors.top: toolbar.bottom
+        anchors.bottom: root.bottom
         anchors.rightMargin: listView.ScrollBar.vertical.width
         anchors.bottomMargin: listView.ScrollBar.horizontal.height
         clip: true
@@ -127,6 +144,7 @@ Item {
         onPressed: function(mouse) {
             const itemUnderMouse = mouseArea.findItemUnderMouse();
             if (Boolean(itemUnderMouse)) {
+                toolbar.autoScrollEnabled = false;
                 root.itemSelected(itemUnderMouse, mouse.modifiers ^ Qt.ControlModifier);
                 mouseArea.lastMultiselectionIndex = itemUnderMouse.index;
                 mouseArea.firstMultiselectionIndex = mouseArea.lastMultiselectionIndex;

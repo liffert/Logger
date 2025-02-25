@@ -11,8 +11,6 @@ import Ui.Components
 SplitView {
     id: root
 
-    orientation: Qt.Vertical
-
     property alias filePath: fileReaderModel.filePath
 
     function copy(copyAll) {
@@ -41,6 +39,18 @@ SplitView {
         }
     }
 
+    function toggleAutoScroll() {
+        if (internal.lastSelectedView === fullFileView) {
+            fullFileView.toolbar.autoScrollEnabled = !fullFileView.toolbar.autoScrollEnabled;
+        } else if (internal.lastSelectedView === filteredFileView) {
+            filteredFileView.toolbar.autoScrollEnabled = !filteredFileView.toolbar.autoScrollEnabled;
+        } else {
+            fullFileView.toolbar.autoScrollEnabled = !fullFileView.toolbar.autoScrollEnabled;
+            filteredFileView.toolbar.autoScrollEnabled = !filteredFileView.toolbar.autoScrollEnabled;
+        }
+    }
+
+    orientation: Qt.Vertical
     handle: Rectangle {
         implicitHeight: 10
         color: SplitHandle.pressed ? Qt.darker("white", 1.2)
@@ -76,85 +86,76 @@ SplitView {
             fileReaderModel.updateItemSelection(item.index, exclusive, !item.isSelected || exclusive);
             internal.lastSelectedView = fullFileView;
         }
+
+        Connections {
+            target: fileReaderModel
+            enabled: fullFileView.toolbar.autoScrollEnabled
+            function onItemsAdded() {
+                if (fullFileView.toolbar.autoScrollEnabled) {
+                    fullFileView.view.positionViewAtEnd();
+                }
+            }
+        }
     }
 
-    Item {
-        id: filteredViewItem
+    TextView {
+        id: filteredFileView
 
         SplitView.fillWidth: true
         SplitView.preferredHeight: 300
         SplitView.minimumHeight: 100
 
-        Rectangle {
-            color: "white"
-            anchors.left: filteredViewItem.left
-            anchors.right: filteredViewItem.right
-            anchors.top: filteredViewItem.top
-            height: filterText.height
+        model: fileReaderModel.filteredModel
+        toolbar.showFilter: true
+
+        delegateComponent: TextViewDelegate {
+            id: filteredFileViewDelegate
+
+            required property var modelData
+
+            text: filteredFileViewDelegate.modelData.text
+            isSelected: filteredFileViewDelegate.modelData.selected
+            lineIndex: filteredFileViewDelegate.modelData.originalIndex
+            textColor: filteredFileViewDelegate.modelData.color
         }
 
-        Text {
-            id: filterText
-            text: "CurrentFilter: "
-            anchors.left: filteredViewItem.left
-            anchors.top: filter.top
+        onUpdateItemsSelection: function(startIndex, endIndex, value) {
+            fileReaderModel.updateFilteredItemsSelection(startIndex, endIndex, false, value);
         }
 
-        TextInput {
-            id: filter
-            anchors.left: filterText.right
-            anchors.right: filteredViewItem.right
-            anchors.top: filteredViewItem.top
-            height: filterText.height
-            onAccepted: fileReaderModel.filter = filter.displayText
+        onItemSelected: function(item, exclusive) {
+            root.forceActiveFocus();
+            fileReaderModel.updateFilteredItemSelection(item.index, exclusive, !item.isSelected || exclusive);
+            internal.lastSelectedView = filteredFileView;
         }
 
-        TextView {
-            id: filteredFileView
-
-            anchors.left: filteredViewItem.left
-            anchors.right: filteredViewItem.right
-            anchors.top: filter.bottom
-            anchors.bottom: filteredViewItem.bottom
-
-            model: fileReaderModel.filteredModel
-
-            delegateComponent: TextViewDelegate {
-                id: filteredFileViewDelegate
-
-                required property var modelData
-
-                text: filteredFileViewDelegate.modelData.text
-                isSelected: filteredFileViewDelegate.modelData.selected
-                lineIndex: filteredFileViewDelegate.modelData.originalIndex
-                textColor: filteredFileViewDelegate.modelData.color
-            }
-
-            onUpdateItemsSelection: function(startIndex, endIndex, value) {
-                fileReaderModel.updateFilteredItemsSelection(startIndex, endIndex, false, value);
-            }
-
-            onItemSelected: function(item, exclusive) {
-                root.forceActiveFocus();
-                fileReaderModel.updateFilteredItemSelection(item.index, exclusive, !item.isSelected || exclusive);
-                internal.lastSelectedView = filteredFileView;
-            }
-
-            onItemDoubleClicked: function(item, exclusive) {
-                fileReaderModel.updateFilteredItemSelection(item.index, exclusive, true);
-                fileReaderModel.updateItemSelection(item.lineIndex, true, true);
-                fullFileView.view.positionViewAtIndex(item.lineIndex, ListView.Center);
-            }
+        onItemDoubleClicked: function(item, exclusive) {
+            fullFileView.toolbar.autoScrollEnabled = false;
+            fileReaderModel.updateFilteredItemSelection(item.index, exclusive, true);
+            fileReaderModel.updateItemSelection(item.lineIndex, true, true);
+            fullFileView.view.positionViewAtIndex(item.lineIndex, ListView.Center);
         }
 
+        Connections {
+            target: fileReaderModel
+            enabled: filteredFileView.toolbar.autoScrollEnabled
+            function onItemsAdded() {
+                if (filteredFileView.toolbar.autoScrollEnabled) {
+                    filteredFileView.view.positionViewAtEnd();
+                }
+            }
+        }
+    }
+
+    Connections {
+        target: filteredFileView.toolbar
+        function onProcessFilter(filterText) {
+            fileReaderModel.filter = filterText;
+        }
     }
 
     FileReaderModel {
         id: fileReaderModel
-        onItemsAdded: {
-            fullFileView.view.positionViewAtEnd();
-            filteredFileView.view.positionViewAtEnd();
-        }
 
         onModelReset: fullFileView.view.contentWidth = fullFileView.view.width
         onFilteredModelReset: filteredFileView.view.contentWidth = filteredFileView.view.width
