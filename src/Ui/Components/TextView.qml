@@ -49,6 +49,12 @@ Item {
         flickableDirection: Flickable.AutoFlickDirection
         delegate: root.delegateComponent
 
+        onHeightChanged: {
+            if (toolbar.autoScrollEnabled) {
+                listView.positionViewAtEnd();
+            }
+        }
+
         //Make scrolling faster.
         //TODO: Add settings for each scrolling speed.
         WheelHandler {
