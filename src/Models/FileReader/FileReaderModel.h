@@ -66,6 +66,8 @@ signals:
     void filterChanged();
     void filePathChanged();
     void itemsAdded();
+    void modelReset();
+    void filteredModelReset();
 
 private:
     void openFile();

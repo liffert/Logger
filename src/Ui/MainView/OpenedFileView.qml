@@ -148,6 +148,9 @@ SplitView {
             fullFileView.view.positionViewAtEnd();
             filteredFileView.view.positionViewAtEnd();
         }
+
+        onModelReset: fullFileView.view.contentWidth = fullFileView.view.width
+        onFilteredModelReset: filteredFileView.view.contentWidth = filteredFileView.view.width
     }
 
     QtObject {

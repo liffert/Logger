@@ -17,6 +17,7 @@ Item {
     signal itemSelected(var item, var exclusive)
     signal itemDoubleClicked(var item, var exclusive)
 
+    //TODO: design check
     Rectangle {
         anchors.fill: parent
         color: "grey"
@@ -79,8 +80,6 @@ Item {
     MouseArea {
         id: mouseArea
         anchors.fill: listView
-        anchors.rightMargin: listView.ScrollBar.vertical.width
-        anchors.bottomMargin: listView.ScrollBar.horizontal.height
 
         readonly property int defaultX: mouseArea.width / 2
 

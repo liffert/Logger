@@ -8,7 +8,7 @@ Item {
 
     required property int index
 
-    readonly property int contentWidth: root.childrenRect.width
+    readonly property int contentPrefferedWidth: Math.max(ListView.view.width, root.childrenRect.width)
 
     //TODO: Maybe think of something better
     property int lineIndex: root.index
@@ -16,16 +16,16 @@ Item {
     property bool isSelected: false
     property color textColor: Qt.color("black")
 
-    width: ListView.view.width
+    width: ListView.view.contentWidth
     height: Math.max(textItem.height, 20)
 
-    onContentWidthChanged: {
-        //TODO: Not ideal as does not reset on the rewriting at the moment.
-        if (ListView.view.contentWidth < root.contentWidth) {
-            ListView.view.contentWidth = root.contentWidth;
+    onContentPrefferedWidthChanged: {
+        if (ListView.view.contentWidth < root.contentPrefferedWidth) {
+            ListView.view.contentWidth = root.contentPrefferedWidth;
         }
     }
 
+    //TODO: Design check
     Rectangle {
         id: background
         anchors.fill: root
@@ -57,8 +57,10 @@ Item {
         text: root.lineIndex
         textFormat: Text.PlainText
         anchors.right: lineIndexItemBackground.right
+        anchors.left: lineIndexItemBackground.left
         anchors.rightMargin: 10
         anchors.verticalCenter: root.verticalCenter
+        horizontalAlignment: Text.AlignRight
         color: "white"
     }
 

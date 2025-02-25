@@ -285,11 +285,13 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
 void Models::FileReader::FileReaderModel::resetModel()
 {
     m_model.reset();
+    emit modelReset();
 }
 
 void Models::FileReader::FileReaderModel::resetFilteredModel()
 {
     m_filteredModel.reset();
+    emit filteredModelReset();
 }
 
 bool Models::FileReader::FileReaderModel::isTextContainsFilter(const QString &text)
