@@ -165,7 +165,6 @@ void Models::FileReader::FileReaderModel::updateItemSelection(int index, bool ex
 
 void Models::FileReader::FileReaderModel::updateItemsSelection(int startIndex, int endIndex, bool exclusive, bool value)
 {
-    qInfo() << startIndex << " " << endIndex;
     m_model.updateSelection(startIndex, endIndex, exclusive, value);
 }
 

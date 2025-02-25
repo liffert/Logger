@@ -16,7 +16,7 @@ Item {
     property bool isSelected: false
     property color textColor: Qt.color("black")
 
-    width: parent?.width ?? root.contentWidth
+    width: parent?.width ?? root.width
     height: 20//TODO: Check some another way to be able to change fonts
 
     onContentWidthChanged: {
