@@ -37,7 +37,7 @@ Item {
         anchors.left: root.left
         anchors.top: root.top
         anchors.bottom: root.bottom
-        width: 100//TODO: ListView.view.count
+        width: 100//TODO: update once when adding new item with latest index from CPP using QTextMetrics
         color: "grey"
     }
 

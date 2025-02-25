@@ -14,4 +14,6 @@ ApplicationWindow {
         width: root.width
         height: root.height
     }
+
+    //TODO set minimum height and width
 }

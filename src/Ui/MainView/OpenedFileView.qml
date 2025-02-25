@@ -41,12 +41,19 @@ SplitView {
         }
     }
 
+    handle: Rectangle {
+        implicitHeight: 10
+        color: SplitHandle.pressed ? Qt.darker("white", 1.2)
+                                   : SplitHandle.hovered ? Qt.darker("white", 1.1)
+                                                         : "white"
+    }
+
     TextView {
         id: fullFileView
 
         SplitView.fillWidth: true
         SplitView.fillHeight: true
-        SplitView.minimumHeight: 40//TODO: set to delegate height
+        SplitView.minimumHeight: 100
 
         model: fileReaderModel.model
 
@@ -76,7 +83,7 @@ SplitView {
 
         SplitView.fillWidth: true
         SplitView.preferredHeight: 300
-        SplitView.minimumHeight: 40//TODO: Set to delegate height + filter height
+        SplitView.minimumHeight: 100
 
         Rectangle {
             color: "white"
