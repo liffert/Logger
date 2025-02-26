@@ -11,7 +11,12 @@ import Ui.Components
 SplitView {
     id: root
 
+    readonly property alias filterText: fileReaderModel.filter
     property alias filePath: fileReaderModel.filePath
+
+    function setInitialFilter(filterText) {
+        filteredFileView.toolbar.setInitialFilter(filterText);
+    }
 
     function copy(copyAll) {
         if (copyAll) {

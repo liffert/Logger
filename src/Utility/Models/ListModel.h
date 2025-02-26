@@ -25,6 +25,7 @@ public:
     void remove(const DataType& data);
     void remove(const std::function<bool(const DataType&)>& comparator);
     void reset();
+    //TODO: Move selection part to separate class called selection model with concept usage to not compile if "selected" property is not part of the class
     void updateSelection(int index, bool exclusive, bool value);
     void updateSelection(int startIndex, int endIndex, bool exclusive, bool value);
     void resetSelection();

@@ -10,6 +10,10 @@ Rectangle {
     property alias autoScrollEnabled: autoScrollOption.checked
     property bool showFilter: false
 
+    function setInitialFilter(filterText) {
+        filter.text = filterText;
+    }
+
     signal processFilter(var filterText)
 
     height: 30

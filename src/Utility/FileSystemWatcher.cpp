@@ -1,6 +1,7 @@
 #include "FileSystemWatcher.h"
 #include <QFileInfo>
 
+//TODO: check if it really should be present as Utility class and not as model class
 Utility::FileSystemWatcher& Utility::FileSystemWatcher::instance()
 {
     static FileSystemWatcher instance;
@@ -17,7 +18,7 @@ Utility::FileSystemWatcher *Utility::FileSystemWatcher::create(QQmlEngine* qmlEn
     return &instance();
 }
 
-void Utility::FileSystemWatcher::addFilePath(const QString& path)
+void Utility::FileSystemWatcher::addFilePath(const QString& path, const QString& filter)
 {
     const QUrl url(path);
     const auto localPath = url.isLocalFile() ? url.toLocalFile() : path;
@@ -25,7 +26,7 @@ void Utility::FileSystemWatcher::addFilePath(const QString& path)
     const auto amountOfSameFiles = std::count_if(openedFiles.cbegin(), openedFiles.cend(), [&localPath](const auto& value) {
         return value.path == localPath;
     });
-    m_openedFilesModel.pushBack({getFileName(localPath, amountOfSameFiles), localPath});
+    m_openedFilesModel.pushBack({getFileName(localPath, amountOfSameFiles), localPath, filter});
     m_fileSystemWatcher.addPath(localPath);
 }
 
@@ -45,6 +46,19 @@ void Utility::FileSystemWatcher::stopWatchingFile(int index)
     }
 }
 
+void Utility::FileSystemWatcher::updateFilter(int index, const QString& filter)
+{
+    const auto& openedFiles = m_openedFilesModel.getRawData();
+    if (index < 0 || index >= openedFiles.count()) {
+        qWarning() << __PRETTY_FUNCTION__ << " index is out of bounds: " << index;
+        return;
+    }
+
+    auto data = openedFiles.at(index);
+    data.filter = filter;
+    m_openedFilesModel.update(index, data);
+}
+
 Utility::Models::ListModel<Utility::OpenedFileInfo>* Utility::FileSystemWatcher::openedFilesModel()
 {
     return &m_openedFilesModel;
@@ -59,23 +73,30 @@ Utility::FileSystemWatcher::FileSystemWatcher(QObject* parent) :
     });
 
     connect(&m_fileSystemWatcher, &QFileSystemWatcher::fileChanged, this, &FileSystemWatcher::fileChanged);
-    const auto openedFiles = m_persistentStorage.value(QStringLiteral("Files")).toStringList();
 
-    for (const auto& filePath : openedFiles) {
+    const auto filesSize = m_persistentStorage.beginReadArray(QStringLiteral("Files"));
+    for (int i = 0; i < filesSize; i++) {
+        m_persistentStorage.setArrayIndex(i);
+        auto filePath = m_persistentStorage.value(QStringLiteral("Path")).toString();
         if (QFile::exists(filePath)) {
-            addFilePath(filePath);
+            addFilePath(filePath, m_persistentStorage.value(QStringLiteral("Filter")).toString());
         }
     }
+    m_persistentStorage.endArray();
 }
 
 Utility::FileSystemWatcher::~FileSystemWatcher()
 {
     const auto& openedFiles = m_openedFilesModel.getRawData();
-    QStringList result;
-    for (const auto& openedFileInfo : openedFiles) {
-        result << openedFileInfo.path;
+
+    m_persistentStorage.clear();
+    m_persistentStorage.beginWriteArray("Files");
+    for (int i = 0; i < openedFiles.count(); i++) {
+        m_persistentStorage.setArrayIndex(i);
+        m_persistentStorage.setValue(QStringLiteral("Path"), openedFiles.at(i).path);
+        m_persistentStorage.setValue(QStringLiteral("Filter"), openedFiles.at(i).filter);
     }
-    m_persistentStorage.setValue(QStringLiteral("Files"), QVariant::fromValue(result));
+    m_persistentStorage.endArray();
     m_persistentStorage.sync();
 }
 

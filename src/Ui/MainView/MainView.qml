@@ -37,8 +37,14 @@ Item {
                 id: openedFileView
 
                 required property var modelData
+                required property int index
 
                 filePath: modelData.path
+                onFilterTextChanged: {
+                    if (modelData.filter !== openedFileView.filterText) {
+                        FileSystemWatcher.updateFilter(index, openedFileView.filterText);
+                    }
+                }
 
                 Connections {
                     target: copyShortcut
@@ -89,6 +95,8 @@ Item {
                         }
                     }
                 }
+
+                Component.onCompleted: openedFileView.setInitialFilter(openedFileView.modelData.filter)
             }
         }
     }
