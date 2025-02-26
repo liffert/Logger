@@ -4,7 +4,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtCore
-import Utility
 
 
 Item {
@@ -13,6 +12,7 @@ Item {
     height: tabBar.height
 
     readonly property alias currentIndex: tabBar.currentIndex
+    required property var openedFilesModel
 
     function openNewFile() {
         fileDialog.open();
@@ -27,7 +27,7 @@ Item {
 
         Repeater {
             id: openedFilesRepeater
-            model: FileSystemWatcher.openedFilesModel
+            model: root.openedFilesModel.model
             delegate: TabButton {
                 id: openedFilesTabDelegate
 
@@ -44,7 +44,7 @@ Item {
                     anchors.top: openedFilesTabDelegate.top
                     anchors.bottom: openedFilesTabDelegate.bottom
                     width: 20
-                    onClicked: FileSystemWatcher.stopWatchingFile(openedFilesTabDelegate.index)
+                    onClicked: root.openedFilesModel.stopWatchingFile(openedFilesTabDelegate.index)
                 }
             }
 
@@ -66,6 +66,6 @@ Item {
         id: fileDialog
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         fileMode: FileDialog.OpenFile
-        onAccepted: FileSystemWatcher.addFilePath(fileDialog.selectedFile)
+        onAccepted: root.openedFilesModel.addFilePath(fileDialog.selectedFile)
     }
 }

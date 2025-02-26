@@ -6,8 +6,10 @@ set(UTILITY_SOURCES
     FileSystemWatcher.cpp
 )
 
+find_package(Qt6 REQUIRED COMPONENTS Core)
 add_subdirectory(Models/)
 
+#TODO: rework to regular library if no QML classes intended
 qt_add_library(Utility STATIC)
 qt_add_qml_module(Utility
     URI Utility

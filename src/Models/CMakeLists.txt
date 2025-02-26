@@ -3,6 +3,7 @@ set(MODELS_SOURCES )
 
 find_package(Qt6 REQUIRED COMPONENTS Gui)
 add_subdirectory(FileReader/)
+add_subdirectory(OpenedFiles/)
 
 qt_add_library(Models STATIC)
 qt_add_qml_module(Models
@@ -16,6 +17,7 @@ qt_add_qml_module(Models
 target_include_directories(Models
     PRIVATE
         FileReader/
+        OpenedFiles/
 )
 
 target_link_libraries(Models

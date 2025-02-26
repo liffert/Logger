@@ -6,7 +6,6 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtCore
 import Models
-import Utility
 import Ui.Components
 
 Item {
@@ -17,6 +16,8 @@ Item {
         anchors.left: root.left
         anchors.right: root.right
         anchors.top: root.top
+
+        openedFilesModel: openedFilesModel
     }
 
     StackLayout {
@@ -32,7 +33,7 @@ Item {
 
         Repeater {
             id: openedFilesViews
-            model: FileSystemWatcher.openedFilesModel
+            model: openedFilesModel.model
             delegate: OpenedFileView {
                 id: openedFileView
 
@@ -42,7 +43,7 @@ Item {
                 filePath: modelData.path
                 onFilterTextChanged: {
                     if (modelData.filter !== openedFileView.filterText) {
-                        FileSystemWatcher.updateFilter(index, openedFileView.filterText);
+                        openedFilesModel.updateFilter(index, openedFileView.filterText);
                     }
                 }
 
@@ -145,5 +146,9 @@ Item {
         id: autoScroll
         context: Qt.ApplicationShortcut
         sequence: "F"
+    }
+
+    OpenedFilesModel {
+        id: openedFilesModel
     }
 }
