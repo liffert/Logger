@@ -48,7 +48,12 @@ Item {
                 }
             }
 
-            onItemAdded: tabBar.currentIndex = openedFilesRepeater.count - 1
+            //TODO: Do not do this action on initial openening, only on "openFile" button
+            onItemAdded: function(index, item) {
+                if (index === openedFilesRepeater.count - 1) {
+                    tabBar.currentIndex = openedFilesRepeater.count - 1
+                }
+            }
         }
     }
 

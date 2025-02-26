@@ -108,10 +108,9 @@ Item {
 
         property int firstMultiselectionIndex: -1
         property int lastMultiselectionIndex: -1
-        property int listViewPosition: listView.contentY - listView.originY
 
         function findItemUnderMouse() {
-            return listView.itemAt(mouseArea.defaultX, mouseArea.mouseY + mouseArea.listViewPosition);
+            return listView.itemAt(mouseArea.defaultX, mouseArea.mouseY + listView.contentY);
         }
 
         function checkMultiselection() {
@@ -172,9 +171,9 @@ Item {
         onMouseYChanged: mouseArea.checkMultiselection()
 
         Connections {
-            target: mouseArea
+            target: listView
             enabled: mouseArea.lastMultiselectionIndex !== -1
-            function onListViewPositionChanged() {
+            function onContentYChanged() {
                 if (mouseArea.lastMultiselectionIndex !== -1) {
                     Qt.callLater(mouseArea.checkMultiselection);//TODO: Check if fine for performance to update that often
                 }
