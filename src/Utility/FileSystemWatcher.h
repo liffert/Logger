@@ -2,6 +2,7 @@
 #include <QFileSystemWatcher>
 #include <QObject>
 #include <QQmlEngine>
+#include <QSettings>
 #include "Models/ListModel.h"
 
 
@@ -36,11 +37,13 @@ signals:
 
 private:
     FileSystemWatcher(QObject* parent = nullptr);
+    ~FileSystemWatcher();
 
     QString getFileName(const QString& path, int index) const;
 
     QFileSystemWatcher m_fileSystemWatcher;
     Utility::Models::ListModel<OpenedFileInfo> m_openedFilesModel;
+    QSettings m_persistentStorage;
 };
 
 }

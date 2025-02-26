@@ -31,11 +31,11 @@ Item {
             delegate: TabButton {
                 id: openedFilesTabDelegate
 
-                required property var modelData
+                required property string name
                 required property int index
 
                 width: openedFilesTabDelegate.implicitWidth + closeButton.width + 20
-                text: openedFilesTabDelegate.modelData.name
+                text: openedFilesTabDelegate.name
 
                 Button {
                     id: closeButton

@@ -16,6 +16,7 @@ public:
     QVariant data(const QModelIndex& index = QModelIndex(), int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
+    void addUserRole(int role, const QByteArray& name, const std::function<QVariant(const DataType&)>& handler);
     void insert(int index, const DataType& data);
     void update(int index, const DataType& data);
     void pushBack(const DataType& data);
@@ -44,13 +45,19 @@ public:
 private:
     QList<DataType> m_data;
     std::set<int> m_selectionHelper;
+    QHash<int, QByteArray> m_roles;
+    QHash<int, std::function<QVariant(const DataType&)>> m_userRoles;
 };
 
 
-
+//TODO: maybe add automatic roles creation from data type?
 template<typename DataType>
 inline ListModel<DataType>::ListModel(QObject* parent)
-{}
+{
+    addUserRole(Qt::DisplayRole, "modelData", [](const auto& value) {
+        return QVariant::fromValue(value);
+    });
+}
 
 template<typename DataType>
 inline int ListModel<DataType>::rowCount(const QModelIndex& parent) const
@@ -65,8 +72,12 @@ inline QVariant ListModel<DataType>::data(const QModelIndex& index, int role) co
         return {};
     }
 
-    if (role == Qt::DisplayRole) {
-        return QVariant::fromValue(m_data.value(index.row()));
+
+    const auto handler = m_userRoles.value(role);
+    if (handler) {
+        return handler(m_data.value(index.row()));
+    } else {
+        qWarning() << __PRETTY_FUNCTION__ << " request for non existent role " << role;
     }
 
     return {};
@@ -75,7 +86,14 @@ inline QVariant ListModel<DataType>::data(const QModelIndex& index, int role) co
 template<typename DataType>
 inline QHash<int, QByteArray> ListModel<DataType>::roleNames() const
 {
-    return { {Qt::DisplayRole, "modelData"} };
+    return m_roles;
+}
+
+template<typename DataType>
+inline void ListModel<DataType>::addUserRole(int role, const QByteArray& name, const std::function<QVariant(const DataType&)>& handler)
+{
+    m_roles.insert(role, name);
+    m_userRoles.insert(role, handler);
 }
 
 template<typename DataType>

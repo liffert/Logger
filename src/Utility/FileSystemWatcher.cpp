@@ -19,9 +19,9 @@ Utility::FileSystemWatcher *Utility::FileSystemWatcher::create(QQmlEngine* qmlEn
 
 void Utility::FileSystemWatcher::addFilePath(const QString& path)
 {
+    const QUrl url(path);
+    const auto localPath = url.isLocalFile() ? url.toLocalFile() : path;
     const auto& openedFiles = m_openedFilesModel.getRawData();
-
-    const auto localPath = QUrl(path).toLocalFile();
     const auto amountOfSameFiles = std::count_if(openedFiles.cbegin(), openedFiles.cend(), [&localPath](const auto& value) {
         return value.path == localPath;
     });
@@ -50,8 +50,33 @@ Utility::Models::ListModel<Utility::OpenedFileInfo>* Utility::FileSystemWatcher:
     return &m_openedFilesModel;
 }
 
-Utility::FileSystemWatcher::FileSystemWatcher(QObject* parent) : QObject(parent) {
+Utility::FileSystemWatcher::FileSystemWatcher(QObject* parent) :
+    QObject(parent),
+    m_persistentStorage(QStringLiteral("Logger"), QStringLiteral("FileSystemWatcherSettings"))
+{
+    m_openedFilesModel.addUserRole(Qt::UserRole + 1, "name", [](const auto& value) {
+        return QVariant::fromValue(value.name);
+    });
+
     connect(&m_fileSystemWatcher, &QFileSystemWatcher::fileChanged, this, &FileSystemWatcher::fileChanged);
+    const auto openedFiles = m_persistentStorage.value(QStringLiteral("Files")).toStringList();
+
+    for (const auto& filePath : openedFiles) {
+        if (QFile::exists(filePath)) {
+            addFilePath(filePath);
+        }
+    }
+}
+
+Utility::FileSystemWatcher::~FileSystemWatcher()
+{
+    const auto& openedFiles = m_openedFilesModel.getRawData();
+    QStringList result;
+    for (const auto& openedFileInfo : openedFiles) {
+        result << openedFileInfo.path;
+    }
+    m_persistentStorage.setValue(QStringLiteral("Files"), QVariant::fromValue(result));
+    m_persistentStorage.sync();
 }
 
 QString Utility::FileSystemWatcher::getFileName(const QString& path, int index) const
