@@ -140,11 +140,11 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     }
 
                     const auto currentReadingPoint = std::chrono::steady_clock::now();
-                    if (currentReadingPoint - startReadingPoint > updateRate) {
+                    if (currentReadingPoint - startReadingPoint > updateRate && !filteredItems.isEmpty()) {
                         QMetaObject::invokeMethod(this, [this, filteredItems]() {
                             m_filteredModel.pushBack(filteredItems);
+                            emit itemsAdded();
                         }, Qt::QueuedConnection);
-                        QMetaObject::invokeMethod(this, &FileReaderModel::itemsAdded, Qt::QueuedConnection);
                         startReadingPoint = currentReadingPoint;
                         filteredItems.clear();
                     }
