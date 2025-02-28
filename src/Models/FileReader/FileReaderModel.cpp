@@ -4,6 +4,7 @@
 #include <QClipboard>
 #include <chrono>
 
+
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
     m_fileWatcher(Utility::FileSystemWatcher::instance())
@@ -59,6 +60,9 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 {
     using namespace std::chrono_literals;
 
+    constexpr auto updateRate = 50ms;
+    constexpr auto threadSleepThreashold = 2s;
+
     QList<Settings::ColoringPattern> coloringPatterns;
     QMetaObject::invokeMethod(this, [this]() {
         return Settings::SettingsModel::instance().coloringPatterns();
@@ -66,15 +70,15 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
     m_currentModelSize = 0;
 
+    std::unique_lock lock(m_fileMutex);
     while (true) {
-        std::unique_lock lock(m_fileMutex);
         m_allowReading.wait(lock, [this, &stopToken]() {
             return (m_file.isOpen() && !m_stream.atEnd()) || m_refilter || m_recolor || stopToken.stop_requested();
         });
 
         QList<LogLine> items;
         QList<FilteredLogLine> filteredItems;
-        const auto startReadingPoint = std::chrono::steady_clock::now();
+        auto startReadingPoint = std::chrono::steady_clock::now();
 
         while (true) {
             if (stopToken.stop_requested()) {
@@ -134,11 +138,17 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     if (isTextContainsFilter(text)) {
                         filteredItems.push_back({text, false, item.color, i});
                     }
-                }
-            }
 
-            if (m_stream.atEnd()) {
-                break;
+                    const auto currentReadingPoint = std::chrono::steady_clock::now();
+                    if (currentReadingPoint - startReadingPoint > updateRate) {
+                        QMetaObject::invokeMethod(this, [this, filteredItems]() {
+                            m_filteredModel.pushBack(filteredItems);
+                        }, Qt::QueuedConnection);
+                        QMetaObject::invokeMethod(this, &FileReaderModel::itemsAdded, Qt::QueuedConnection);
+                        startReadingPoint = currentReadingPoint;
+                        filteredItems.clear();
+                    }
+                }
             }
 
             if (startFromTheBeginningIfNeeded(false)) {
@@ -146,26 +156,38 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 filteredItems.clear();
             };
 
-            const auto text = m_stream.readLine();
-            if (!text.isEmpty()) {
-                const auto color = getColor(text, coloringPatterns);
-                items.push_back({.text = text, .color = color});
-                if (isTextContainsFilter(text)) {
-                    filteredItems.push_back({text, false, color, m_currentModelSize});
+            if (!m_stream.atEnd()) {
+                const auto text = m_stream.readLine();
+                if (!text.isEmpty()) {
+                    const auto color = getColor(text, coloringPatterns);
+                    items.push_back({.text = text, .color = color});
+                    if (isTextContainsFilter(text)) {
+                        filteredItems.push_back({text, false, color, m_currentModelSize});
+                    }
+                    m_currentModelSize++;
                 }
-                m_currentModelSize++;
             }
-            m_fileSize = m_file.size();
-            if (std::chrono::steady_clock::now() - startReadingPoint > 1000ms) {
+
+            //Update only with some rate. Sleep the thread only after threashold passed, because
+            //there are circumstances under which fileChanged event will be fired with 1s interval
+            //making thread refresh rate 1s as a result.
+            const auto currentReadingPoint = std::chrono::steady_clock::now();
+            const auto timePassed = currentReadingPoint - startReadingPoint;
+            const auto triggerItemsAdded = !items.empty() || !filteredItems.empty();
+            if (timePassed >= updateRate && triggerItemsAdded) {
+                QMetaObject::invokeMethod(this, [this, items, filteredItems]() {
+                    m_model.pushBack(items);
+                    m_filteredModel.pushBack(filteredItems);
+                    emit itemsAdded();
+                }, Qt::QueuedConnection);
+                items.clear();
+                filteredItems.clear();
+                startReadingPoint = currentReadingPoint;
+            } else if (timePassed >= threadSleepThreashold && m_stream.atEnd()) {
+                qInfo() << "Thread sleep waiting for file update";
                 break;
             }
         }
-
-        QMetaObject::invokeMethod(this, [this, items, filteredItems]() {
-            m_model.pushBack(items);
-            m_filteredModel.pushBack(filteredItems);
-        }, Qt::QueuedConnection);
-        QMetaObject::invokeMethod(this, &FileReaderModel::itemsAdded, Qt::QueuedConnection);
     }
 }
 
@@ -248,6 +270,7 @@ Utility::Models::SelectionListModel<Models::FileReader::FilteredLogLine>* Models
 bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force)
 {
     if (force || m_file.size() < m_fileSize) {
+        qInfo() << "Start from beginiing " << m_file.size() << " " << m_fileSize;
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         m_stream.seek(0);
@@ -273,7 +296,7 @@ void Models::FileReader::FileReaderModel::triggerRefiltering()
 void Models::FileReader::FileReaderModel::triggerRecoloring()
 {
     if (m_file.isOpen()) {
-        if (!m_refilter) {
+        if (!m_recolor) {
             m_recolor = true;
             m_allowReading.notify_one();
         }
