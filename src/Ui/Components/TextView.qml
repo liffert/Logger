@@ -37,66 +37,18 @@ Item {
         }
     }
 
-    ListView {
+    ListViewEnhanced {
         id: listView
         anchors.left: root.left
         anchors.right: root.right
         anchors.top: toolbar.bottom
         anchors.bottom: root.bottom
-        anchors.rightMargin: listView.ScrollBar.vertical.width
-        anchors.bottomMargin: listView.ScrollBar.horizontal.height
-        clip: true
-        flickableDirection: Flickable.AutoFlickDirection
         delegate: root.delegateComponent
 
         onHeightChanged: {
             if (toolbar.autoScrollEnabled) {
                 listView.positionViewAtEnd();
             }
-        }
-
-        //Make scrolling faster.
-        //TODO: Add settings for each scrolling speed.
-        WheelHandler {
-            target: listView
-            property: "contentY"
-            rotationScale: -1
-            orientation: Qt.Vertical
-        }
-
-        WheelHandler {
-            target: listView
-            property: "contentX"
-            rotationScale: -1
-            orientation: Qt.Horizontal
-        }
-
-        BoundaryRule on contentY {
-            minimum: listView.originY
-            maximum: listView.originY + Math.max(listView.height, listView.contentHeight) - listView.height
-            returnDuration: 0
-        }
-
-        BoundaryRule on contentX {
-            minimum: listView.originX
-            maximum: listView.originX + Math.max(listView.width, listView.contentWidth) - listView.width
-            returnDuration: 0
-        }
-
-        ScrollBar.vertical: ScrollBar {
-            parent: listView.parent
-            anchors.top: listView.top
-            anchors.bottom: listView.bottom
-            anchors.left: listView.right
-            policy: ScrollBar.AlwaysOn
-        }
-
-        ScrollBar.horizontal: ScrollBar {
-            parent: listView.parent
-            anchors.top: listView.bottom
-            anchors.left: listView.left
-            anchors.right: listView.right
-            policy: ScrollBar.AlwaysOn
         }
     }
 

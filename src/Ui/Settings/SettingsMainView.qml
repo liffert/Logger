@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
+import Ui.Components
 import Models
 
 Item {
@@ -37,10 +38,9 @@ Item {
         anchors.top: fontSetting.bottom
         anchors.bottom: root.bottom
 
-        ListView {
+        ListViewEnhanced {
             id: listView
             anchors.fill: coloringPatterns
-            clip: true
 
             model: SettingsModel.coloringPatternsModel
             delegate: Item {
