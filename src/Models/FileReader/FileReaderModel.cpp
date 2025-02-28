@@ -18,15 +18,8 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
         }
     });
 
-    connect(this, &FileReaderModel::filterChanged, this, [this]() {
-        if (m_file.isOpen()) {
-            if (!m_refilter) {
-                m_refilter = true;
-                m_allowReading.notify_one();
-            }
-        }
-    });
-
+    connect(&Settings::SettingsModel::instance(), &Settings::SettingsModel::coloringPatternsChanged, this, &FileReaderModel::triggerRecoloring);
+    connect(this, &FileReaderModel::filterChanged, this, &FileReaderModel::triggerRefiltering);
     connect(this, &FileReaderModel::filePathChanged, this, &FileReaderModel::openFile);
 }
 
@@ -56,7 +49,7 @@ void Models::FileReader::FileReaderModel::openFile()
     m_threadFinished = false;
     m_thread = std::jthread([this](const std::stop_token& stopToken) {
         processFile(stopToken);
-        //Atomic flag looks quite ugly. Maybe to use std::packaged_task with std::future,
+        //Atomic flag loModels/oks quite ugly. Maybe to use std::packaged_task with std::future,
         //but in general from performance perspective it will not be any better...
         m_threadFinished = true;
     });
@@ -66,11 +59,17 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 {
     using namespace std::chrono_literals;
 
+    QList<Settings::ColoringPattern> coloringPatterns;
+    QMetaObject::invokeMethod(this, [this]() {
+        return Settings::SettingsModel::instance().coloringPatterns();
+    }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(coloringPatterns), coloringPatterns));
+
     m_currentModelSize = 0;
+
     while (true) {
         std::unique_lock lock(m_fileMutex);
         m_allowReading.wait(lock, [this, &stopToken]() {
-            return (m_file.isOpen() && !m_stream.atEnd()) || m_refilter || stopToken.stop_requested();
+            return (m_file.isOpen() && !m_stream.atEnd()) || m_refilter || m_recolor || stopToken.stop_requested();
         });
 
         QList<LogLine> items;
@@ -80,6 +79,17 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
         while (true) {
             if (stopToken.stop_requested()) {
                 return;
+            }
+
+            while (m_recolor) {
+                if (stopToken.stop_requested()) {
+                    return;
+                }
+
+                startFromTheBeginningIfNeeded(true);
+                QMetaObject::invokeMethod(this, [this, &coloringPatterns]() {
+                    return Settings::SettingsModel::instance().coloringPatterns();
+                }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(coloringPatterns), coloringPatterns));
             }
 
             while (m_refilter) {
@@ -138,7 +148,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
             const auto text = m_stream.readLine();
             if (!text.isEmpty()) {
-                const auto color = getColor(text);
+                const auto color = getColor(text, coloringPatterns);
                 items.push_back({.text = text, .color = color});
                 if (isTextContainsFilter(text)) {
                     filteredItems.push_back({text, false, color, m_currentModelSize});
@@ -242,6 +252,7 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         m_stream.seek(0);
         m_refilter = false;
+        m_recolor = false;
         m_fileSize = m_file.size();
         m_currentModelSize = 0;
         return true;
@@ -249,22 +260,31 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
     return false;
 }
 
-QColor Models::FileReader::FileReaderModel::getColor(const QString &text) const
+void Models::FileReader::FileReaderModel::triggerRefiltering()
 {
-    static const QList<QPair<QString, QColor>> patterns = {
-                                                           {":RQ :", QColor(Qt::magenta)},
-                                                           {":RP :", QColor(Qt::blue)},
-                                                           {":EV :", QColor(Qt::darkCyan)},//TODO: Cyan in old view app, but really hard to read, so maybe dark cyan is better
-                                                           {"WARN", QColor(QColorConstants::Svg::orange)},
-                                                           {"CRIT", QColor(Qt::red)},
-                                                           {"FATAL", QColor(Qt::darkRed)},
-                                                           {"MYLOG", QColor(Qt::darkGreen)},
-                                                           {"if1verbose", QColor(Qt::darkBlue)}
-    };
+    if (m_file.isOpen()) {
+        if (!m_refilter) {
+            m_refilter = true;
+            m_allowReading.notify_one();
+        }
+    }
+}
 
+void Models::FileReader::FileReaderModel::triggerRecoloring()
+{
+    if (m_file.isOpen()) {
+        if (!m_refilter) {
+            m_recolor = true;
+            m_allowReading.notify_one();
+        }
+    }
+}
+
+QColor Models::FileReader::FileReaderModel::getColor(const QString& text, const QList<Settings::ColoringPattern>& patterns) const
+{
     for (const auto& pattern : patterns) {
-        if (text.contains(QRegularExpression(pattern.first, QRegularExpression::CaseInsensitiveOption))) {
-            return pattern.second;
+        if (text.contains(QRegularExpression(pattern.pattern, QRegularExpression::CaseInsensitiveOption))) {
+            return pattern.color;
         }
     }
     return {Qt::black};
@@ -280,6 +300,7 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
         qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
     }
     m_file.close();
+    m_refilter = false;
 }
 
 void Models::FileReader::FileReaderModel::resetModel()

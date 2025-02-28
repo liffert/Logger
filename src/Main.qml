@@ -10,17 +10,20 @@ ApplicationWindow {
     visible: true
     title: qsTr("Logger Enhanced")
 
-    header: ToolBar {
-        ToolButton {
-            text: "Settings"
-            onClicked: settingsWindow.show()
+    menuBar: MenuBar {
+        Menu {
+            title: "File"
+            Action {
+                text: "Settings"
+                onTriggered: settingsWindow.show()
+            }
         }
     }
 
     MainView {
         id: mainView
         width: root.width
-        height: root.height
+        height: root.height - root.menuBar.height
     }
 
     SettingsWindow {

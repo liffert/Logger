@@ -10,6 +10,7 @@
 #include <atomic>
 #include "Models/SelectionListModel.h"
 #include "FileSystemWatcher.h"
+#include "Settings/SettingsModel.h"
 
 namespace Models::FileReader {
 
@@ -77,7 +78,9 @@ private:
     void resetFilteredModel();
     bool isTextContainsFilter(const QString& text);
     bool startFromTheBeginningIfNeeded(bool force);
-    QColor getColor(const QString& text) const;
+    void triggerRefiltering();
+    void triggerRecoloring();
+    QColor getColor(const QString& text, const QList<Settings::ColoringPattern>& patterns) const;
 
     template<typename DataType>
     void copyToClipBoard(const Utility::Models::SelectionListModel<DataType>& model) const;
@@ -102,6 +105,7 @@ private:
     std::jthread m_thread;
     std::condition_variable m_allowReading;
     std::atomic<bool> m_refilter = false;
+    std::atomic<bool> m_recolor = false;
     std::atomic<bool> m_threadFinished = true;
 
     int m_fileSize = 0;

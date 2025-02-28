@@ -35,5 +35,4 @@ Item {
         selectedFont: SettingsModel.logLinesFont
         onAccepted: SettingsModel.updateLogLinesFont(fontDialog.selectedFont)
     }
-
 }
