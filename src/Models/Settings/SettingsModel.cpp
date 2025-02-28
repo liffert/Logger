@@ -8,7 +8,7 @@ Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
     m_settings(QStringLiteral("Logger"), QStringLiteral("Settings"))
 {
     updateLogLinesFont(m_settings.value(QStringLiteral("LogLinesFont"), QGuiApplication::font()).value<QFont>());
-    m_coloringPatterns = {
+    m_coloringPatternsModel.pushBack({
         {":RQ :", QColor(Qt::magenta)},
         {":RP :", QColor(Qt::blue)},
         {":EV :", QColor(Qt::darkCyan)},
@@ -17,7 +17,7 @@ Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
         {"FATAL", QColor(Qt::darkRed)},
         {"MYLOG", QColor(Qt::darkGreen)},
         {"if1verbose", QColor(Qt::darkBlue)}
-    };
+    });
 }
 
 Models::Settings::SettingsModel* Models::Settings::SettingsModel::create(QQmlEngine* qmlEngine, QJSEngine* jsEngine)
@@ -85,8 +85,13 @@ QString Models::Settings::SettingsModel::formatFont(const QFont& font)
     return result;
 }
 
-QList<Models::Settings::ColoringPattern> Models::Settings::SettingsModel::coloringPatterns()
+const QList<Models::Settings::ColoringPattern> &Models::Settings::SettingsModel::coloringPatterns()
 {
-    return m_coloringPatterns;
+    return m_coloringPatternsModel.getRawData();
+}
+
+Utility::Models::ListModel<Models::Settings::ColoringPattern> *Models::Settings::SettingsModel::coloringPatternsModel()
+{
+    return &m_coloringPatternsModel;
 }
 
