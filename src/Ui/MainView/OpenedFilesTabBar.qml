@@ -28,6 +28,7 @@ Item {
         Repeater {
             id: openedFilesRepeater
             model: root.openedFilesModel.model
+            //TODO: Rework this delegate
             delegate: TabButton {
                 id: openedFilesTabDelegate
 

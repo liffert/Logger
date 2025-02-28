@@ -20,6 +20,24 @@ Item {
         openedFilesModel: openedFilesModel
     }
 
+    Button {
+        text: "fontLine"
+        onClicked: fontDialog2.open()
+        anchors.right: tabBar.right
+        anchors.top: tabBar.top
+    }
+
+    FontDialog {
+        id: fontDialog2
+
+        selectedFont: SettingsModel.logLinesFont
+
+        onAccepted: {
+            console.log("MYLOG ", fontDialog2.selectedFont);
+            SettingsModel.updateLogLinesFont(fontDialog2.selectedFont);
+        }
+    }
+
     StackLayout {
         id: openedFiles
 

@@ -68,7 +68,7 @@ SplitView {
 
         SplitView.fillWidth: true
         SplitView.fillHeight: true
-        SplitView.minimumHeight: 100
+        SplitView.minimumHeight: fullFileView.toolbar.height + 200
 
         model: fileReaderModel.model
 
@@ -80,6 +80,7 @@ SplitView {
             text: fullFileViewDelegate.modelData.text
             isSelected: fullFileViewDelegate.modelData.selected
             textColor: fullFileViewDelegate.modelData.color
+            textFont: SettingsModel.logLinesFont
         }
 
         onUpdateItemsSelection: function(startIndex, endIndex, value) {
@@ -107,8 +108,8 @@ SplitView {
         id: filteredFileView
 
         SplitView.fillWidth: true
-        SplitView.preferredHeight: 300
-        SplitView.minimumHeight: 100
+        SplitView.preferredHeight: filteredFileView.toolbar.height + 300
+        SplitView.minimumHeight: filteredFileView.toolbar.height + 200
 
         model: fileReaderModel.filteredModel
         toolbar.showFilter: true
@@ -122,6 +123,7 @@ SplitView {
             isSelected: filteredFileViewDelegate.modelData.selected
             lineIndex: filteredFileViewDelegate.modelData.originalIndex
             textColor: filteredFileViewDelegate.modelData.color
+            textFont: SettingsModel.logLinesFont
         }
 
         onUpdateItemsSelection: function(startIndex, endIndex, value) {

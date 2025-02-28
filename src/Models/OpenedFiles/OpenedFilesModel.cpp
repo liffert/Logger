@@ -34,7 +34,6 @@ Models::OpenedFiles::OpenedFilesModel::~OpenedFilesModel()
         m_persistentStorage.setValue(QStringLiteral("Filter"), openedFiles.at(i).filter);
     }
     m_persistentStorage.endArray();
-    m_persistentStorage.sync();
 }
 
 void Models::OpenedFiles::OpenedFilesModel::addFilePath(const QString& path, const QString& filter)

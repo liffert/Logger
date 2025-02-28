@@ -15,6 +15,7 @@ Item {
     property string text: ""
     property bool isSelected: false
     property color textColor: Qt.color("black")
+    property font textFont: font
 
     width: ListView.view.contentWidth
     height: Math.max(textItem.height, 20)
@@ -62,6 +63,7 @@ Item {
         anchors.verticalCenter: root.verticalCenter
         horizontalAlignment: Text.AlignRight
         color: "white"
+        font: root.textFont
     }
 
     //TextInput can render instantly text which regular Text item renders within 800ms+
@@ -73,6 +75,7 @@ Item {
         text: root.text
         readOnly: true
         color: root.textColor
+        font: root.textFont
     }
 
     states: [

@@ -16,7 +16,7 @@ Rectangle {
 
     signal processFilter(var filterText)
 
-    height: 30
+    height: filterText.implicitHeight + 10
 
     Item {
         id: filterItem
