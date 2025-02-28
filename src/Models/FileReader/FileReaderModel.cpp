@@ -225,12 +225,12 @@ void Models::FileReader::FileReaderModel::copyAllItems()
     copyToClipBoard(modelSelection, m_model.getRawData());
 }
 
-Utility::Models::ListModel<Models::FileReader::LogLine>* Models::FileReader::FileReaderModel::model()
+Utility::Models::SelectionListModel<Models::FileReader::LogLine>* Models::FileReader::FileReaderModel::model()
 {
     return &m_model;
 }
 
-Utility::Models::ListModel<Models::FileReader::FilteredLogLine>* Models::FileReader::FileReaderModel::filteredModel()
+Utility::Models::SelectionListModel<Models::FileReader::FilteredLogLine>* Models::FileReader::FileReaderModel::filteredModel()
 {
     return &m_filteredModel;
 }
@@ -300,7 +300,7 @@ bool Models::FileReader::FileReaderModel::isTextContainsFilter(const QString &te
 }
 
 template<typename DataType>
-void Models::FileReader::FileReaderModel::copyToClipBoard(const Utility::Models::ListModel<DataType>& model) const
+void Models::FileReader::FileReaderModel::copyToClipBoard(const Utility::Models::SelectionListModel<DataType>& model) const
 {
     copyToClipBoard(model.getSelection(), model.getRawData());
 }
@@ -325,7 +325,7 @@ void Models::FileReader::FileReaderModel::copyToClipBoard(const std::set<int>& s
 }
 
 template<typename DataType>
-void Models::FileReader::FileReaderModel::deselect(Utility::Models::ListModel<DataType>& model)
+void Models::FileReader::FileReaderModel::deselect(Utility::Models::SelectionListModel<DataType>& model)
 {
     const auto selection = model.getSelection();
 
@@ -335,7 +335,7 @@ void Models::FileReader::FileReaderModel::deselect(Utility::Models::ListModel<Da
 }
 
 template<typename DataType>
-void Models::FileReader::FileReaderModel::selectAll(Utility::Models::ListModel<DataType>& model)
+void Models::FileReader::FileReaderModel::selectAll(Utility::Models::SelectionListModel<DataType>& model)
 {
     for (int i = 0; i < model.rowCount(); i++) {
         model.updateSelection(i, false, true);

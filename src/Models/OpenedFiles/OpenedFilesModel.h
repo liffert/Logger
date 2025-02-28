@@ -43,8 +43,8 @@ private:
     QString getFileName(const QString& path, int index) const;
 
     Utility::Models::ListModel<FileInfo> m_model;
-    QSettings m_persistentStorage;
     Utility::FileSystemWatcher& m_fileSystemWatcher;
+    QSettings m_persistentStorage;
 };
 
 }

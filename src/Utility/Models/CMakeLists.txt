@@ -1,6 +1,7 @@
 set(UTILITY_HEADERS
     ${UTILITY_HEADERS}
     ${CMAKE_CURRENT_SOURCE_DIR}/ListModel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SelectionListModel.h
     PARENT_SCOPE
 )
 

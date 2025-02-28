@@ -8,7 +8,7 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
-#include "Models/ListModel.h"
+#include "Models/SelectionListModel.h"
 #include "FileSystemWatcher.h"
 
 namespace Models::FileReader {
@@ -37,8 +37,8 @@ class FileReaderModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
 
-    Q_PROPERTY(Utility::Models::ListModel<LogLine> *model READ model() CONSTANT)
-    Q_PROPERTY(Utility::Models::ListModel<FilteredLogLine> *filteredModel READ filteredModel() CONSTANT)
+    Q_PROPERTY(Utility::Models::SelectionListModel<LogLine> *model READ model() CONSTANT)
+    Q_PROPERTY(Utility::Models::SelectionListModel<FilteredLogLine> *filteredModel READ filteredModel() CONSTANT)
     Q_PROPERTY(QString filter MEMBER m_filter NOTIFY filterChanged)
     Q_PROPERTY(QString filePath MEMBER m_filePath NOTIFY filePathChanged)
 
@@ -59,8 +59,8 @@ public:
     Q_INVOKABLE void copyToClipboardSelectedFilteredItems();
     Q_INVOKABLE void copyAllItems();
 
-    Utility::Models::ListModel<LogLine>* model();
-    Utility::Models::ListModel<FilteredLogLine>* filteredModel();
+    Utility::Models::SelectionListModel<LogLine>* model();
+    Utility::Models::SelectionListModel<FilteredLogLine>* filteredModel();
 
 signals:
     void filterChanged();
@@ -80,20 +80,20 @@ private:
     QColor getColor(const QString& text) const;
 
     template<typename DataType>
-    void copyToClipBoard(const Utility::Models::ListModel<DataType>& model) const;
+    void copyToClipBoard(const Utility::Models::SelectionListModel<DataType>& model) const;
     template<typename DataType>
     void copyToClipBoard(const std::set<int>& selection, const QList<DataType>& data) const;
     template<typename DataType>
-    void deselect(Utility::Models::ListModel<DataType>& model);
+    void deselect(Utility::Models::SelectionListModel<DataType>& model);
     template<typename DataType>
-    void selectAll(Utility::Models::ListModel<DataType>& model);
+    void selectAll(Utility::Models::SelectionListModel<DataType>& model);
 
     QFile m_file;
     QTextStream m_stream;
 
     Utility::FileSystemWatcher& m_fileWatcher;
-    Utility::Models::ListModel<LogLine> m_model;
-    Utility::Models::ListModel<FilteredLogLine> m_filteredModel;
+    Utility::Models::SelectionListModel<LogLine> m_model;
+    Utility::Models::SelectionListModel<FilteredLogLine> m_filteredModel;
     QString m_filter;
     QString m_filePath;
     QString m_fileName;

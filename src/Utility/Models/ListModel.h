@@ -24,13 +24,8 @@ public:
     void remove(int index);
     void remove(const DataType& data);
     void remove(const std::function<bool(const DataType&)>& comparator);
-    void reset();
-    //TODO: Move selection part to separate class called selection model with concept usage to not compile if "selected" property is not part of the class
-    void updateSelection(int index, bool exclusive, bool value);
-    void updateSelection(int startIndex, int endIndex, bool exclusive, bool value);
-    void resetSelection();
+    virtual void reset();
     const QList<DataType>& getRawData() const;
-    const std::set<int>& getSelection() const;
 
     // void move(int from, int to)
     // {
@@ -43,9 +38,8 @@ public:
     //     emit dataChanged(index(from), index(to));
     // }
 
-private:
+protected:
     QList<DataType> m_data;
-    std::set<int> m_selectionHelper;
     QHash<int, QByteArray> m_roles;
     QHash<int, std::function<QVariant(const DataType&)>> m_userRoles;
 };
@@ -179,96 +173,13 @@ inline void ListModel<DataType>::reset()
 {
     beginResetModel();
     m_data.clear();
-    m_selectionHelper.clear();
     endResetModel();
-}
-
-template<typename DataType>
-inline void ListModel<DataType>::updateSelection(int index, bool exclusive, bool value)
-{
-    if (index < 0 || index >= m_data.size()) {
-        qWarning() << __PRETTY_FUNCTION__ << " index is out of bounds: " << index;
-        return;
-    }
-
-    if (exclusive) {
-        resetSelection();
-    }
-
-    auto item = m_data.at(index);
-    if (item.selected != value) {
-        item.selected = value;
-        if (item.selected) {
-            m_selectionHelper.insert(index);
-        } else {
-            m_selectionHelper.erase(index);
-        }
-        update(index, item);
-    }
-}
-
-template<typename DataType>
-inline void ListModel<DataType>::updateSelection(int startIndex, int endIndex, bool exclusive, bool value)
-{
-    if (startIndex < 0 || startIndex >= m_data.size() || endIndex < 0 || endIndex >= m_data.size()) {
-        qWarning() << __PRETTY_FUNCTION__ << " some index is out of bounds " << startIndex << " " << endIndex;
-        return;
-    }
-
-    if (exclusive) {
-        resetSelection();
-    }
-
-    int from = 0;
-    int to = 0;
-
-    if (startIndex <= endIndex) {
-        from = startIndex;
-        to = endIndex;
-    } else {
-        from = endIndex;
-        to = startIndex;
-    }
-
-    for (int i = from; i <= to; i++) {
-        auto& item = m_data[i];
-        if (item.selected != value) {
-            item.selected = value;
-            if (item.selected) {
-                m_selectionHelper.insert(i);
-            } else {
-                m_selectionHelper.erase(i);
-            }
-        }
-    }
-    emit dataChanged(ListModel::index(from), ListModel::index(to));
-}
-
-template<typename DataType>
-inline void ListModel<DataType>::resetSelection()
-{
-    for (const auto& selectedIndex : m_selectionHelper) {
-        if (selectedIndex >= 0 && selectedIndex < m_data.size()) {
-            auto item = m_data.at(selectedIndex);
-            if (item.selected) {
-                item.selected = false;
-                update(selectedIndex, item);
-            }
-        }
-    }
-    m_selectionHelper.clear();
 }
 
 template<typename DataType>
 inline const QList<DataType>& ListModel<DataType>::getRawData() const
 {
     return m_data;
-}
-
-template<typename DataType>
-inline const std::set<int> &ListModel<DataType>::getSelection() const
-{
-    return m_selectionHelper;
 }
 
 }

@@ -1,5 +1,6 @@
 #include "OpenedFilesModel.h"
 #include <QFileInfo>
+#include <QGuiApplication>
 
 Models::OpenedFiles::OpenedFilesModel::OpenedFilesModel(QObject* parent) :
     QObject(parent),
