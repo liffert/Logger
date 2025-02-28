@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Ui.MainView
+import Ui.Settings
 
 ApplicationWindow {
     id: root
@@ -9,10 +10,21 @@ ApplicationWindow {
     visible: true
     title: qsTr("Logger Enhanced")
 
+    header: ToolBar {
+        ToolButton {
+            text: "Settings"
+            onClicked: settingsWindow.show()
+        }
+    }
+
     MainView {
         id: mainView
         width: root.width
         height: root.height
+    }
+
+    SettingsWindow {
+        id: settingsWindow
     }
 
     //TODO set minimum height and width

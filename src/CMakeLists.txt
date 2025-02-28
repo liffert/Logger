@@ -23,6 +23,7 @@ qt_add_qml_module(appLoggerEnhanced
 add_subdirectory(Utility/)
 add_subdirectory(Ui/MainView/)
 add_subdirectory(Ui/Components/)
+add_subdirectory(Ui/Settings/)
 add_subdirectory(Models/)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -41,6 +42,7 @@ target_link_libraries(appLoggerEnhanced
     Qt6::Quick
     Ui_MainViewplugin
     Ui_Componentsplugin
+    Ui_Settingsplugin
     Modelsplugin
     Utilityplugin
 )
