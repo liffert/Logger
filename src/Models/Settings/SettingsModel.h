@@ -22,6 +22,9 @@ public:
     QFont logLinesFont() const;
 
     Q_INVOKABLE void updateLogLinesFont(const QFont& value);
+    Q_INVOKABLE void resetLogLinesFont();
+    //TODO: check maybe for utility class formatter?
+    Q_INVOKABLE QString formatFont(const QFont& font);
 
 signals:
     void logLinesFontChanged();

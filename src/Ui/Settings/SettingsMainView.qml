@@ -8,21 +8,32 @@ import Models
 Item {
     id: root
 
-    Button {
-        text: "fontLine"
-        onClicked: fontDialog2.open()
-        anchors.centerIn: root
+    Row {
+        spacing: 5
+        Text {
+            id: currentFont
+            text: "Current font: "
+            anchors.verticalCenter: selectFontButton.verticalCenter
+        }
+
+        Button {
+            id: selectFontButton
+            text: SettingsModel.formatFont(SettingsModel.logLinesFont)
+            onClicked: fontDialog.open()
+        }
+
+        Button {
+            id: resetToDefault
+            text: "Reset to default"
+            onClicked: SettingsModel.resetLogLinesFont()
+        }
     }
 
     FontDialog {
-        id: fontDialog2
+        id: fontDialog
 
         selectedFont: SettingsModel.logLinesFont
-
-        onAccepted: {
-            console.log("MYLOG ", fontDialog2.selectedFont);
-            SettingsModel.updateLogLinesFont(fontDialog2.selectedFont);
-        }
+        onAccepted: SettingsModel.updateLogLinesFont(fontDialog.selectedFont)
     }
 
 }
