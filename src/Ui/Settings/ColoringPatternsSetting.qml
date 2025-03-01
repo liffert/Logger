@@ -16,7 +16,7 @@ Rectangle {
         anchors.left: root.left
         anchors.right: root.right
         anchors.top: root.top
-        anchors.bottom: addItem.top
+        anchors.bottom: addEditItem.top
         anchors.topMargin: 5
         anchors.leftMargin: 5
 
@@ -30,7 +30,7 @@ Rectangle {
 
             height: contentLayout.height
             width: ListView.view.contentWidth
-            opacity: Boolean(addItem.editedDelegate) && delegate != addItem.editedDelegate ? 0.5 : 1.0
+            opacity: Boolean(addEditItem.editedDelegate) && delegate != addEditItem.editedDelegate ? 0.5 : 1.0
 
             //TODO: reset contentWidth on removing elements
             Row {
@@ -103,14 +103,14 @@ Rectangle {
                 drag.minimumY: 0 - (delegate.height / 2)
 
                 onPressed: {
-                    if (!Boolean(addItem.editedDelegate)) {
+                    if (!Boolean(addEditItem.editedDelegate)) {
                         delegate.isHeld = true
                     }
                 }
                 onReleased: delegate.isHeld = false
                 onDoubleClicked: {
-                    if (!Boolean(addItem.editedDelegate)) {
-                        addItem.editedDelegate = delegate;
+                    if (!Boolean(addEditItem.editedDelegate)) {
+                        addEditItem.editedDelegate = delegate;
                     }
                 }
             }
@@ -118,20 +118,20 @@ Rectangle {
     }
 
     Rectangle {
-        id: addItem
+        id: addEditItem
 
         property var editedDelegate: null
 
         anchors.bottom: root.bottom
         anchors.left: root.left
         anchors.right: root.right
-        height: addItemText.height + 20
+        height: addEditItemText.height + 20
         border.width: 2
 
         Text {
-            id: addItemText
-            anchors.verticalCenter: addItem.verticalCenter
-            anchors.left: addItem.left
+            id: addEditItemText
+            anchors.verticalCenter: addEditItem.verticalCenter
+            anchors.left: addEditItem.left
             anchors.leftMargin: 5
             text: "Input new color pattern:"
         }
@@ -139,25 +139,25 @@ Rectangle {
         TextInput {
             id: colorPatternInput
             clip: true
-            anchors.left: addItemText.right
-            anchors.right: addItemOptionsRow.left
+            anchors.left: addEditItemText.right
+            anchors.right: addEditItemOptionsRow.left
             anchors.leftMargin: 5
-            anchors.verticalCenter: addItem.verticalCenter
+            anchors.verticalCenter: addEditItem.verticalCenter
         }
 
         Row {
-            id: addItemOptionsRow
-            anchors.right: addItem.right
-            anchors.top: addItem.top
-            anchors.bottom: addItem.bottom
+            id: addEditItemOptionsRow
+            anchors.right: addEditItem.right
+            anchors.top: addEditItem.top
+            anchors.bottom: addEditItem.bottom
             anchors.rightMargin: 5
             anchors.topMargin: 5
             anchors.bottomMargin: 5
 
             Button {
                 id: colorPicker
-                anchors.top: addItemOptionsRow.top
-                anchors.bottom: addItemOptionsRow.bottom
+                anchors.top: addEditItemOptionsRow.top
+                anchors.bottom: addEditItemOptionsRow.bottom
 
                 property color patternColor: "black"
 
@@ -175,7 +175,7 @@ Rectangle {
 
             CheckBox {
                 id: caseSensitiveOption
-                anchors.verticalCenter: addItemOptionsRow.verticalCenter
+                anchors.verticalCenter: addEditItemOptionsRow.verticalCenter
 
                 text: "Case Sensitive"
                 checked: false
@@ -183,13 +183,13 @@ Rectangle {
 
             Button {
                 id: confirmButton
-                anchors.top: addItemOptionsRow.top
-                anchors.bottom: addItemOptionsRow.bottom
+                anchors.top: addEditItemOptionsRow.top
+                anchors.bottom: addEditItemOptionsRow.bottom
                 text: "Add pattern"
                 onClicked: {
-                    if (Boolean(addItem.editedDelegate)) {
-                        SettingsModel.updatePattern(colorPatternInput.displayText, colorPicker.patternColor, caseSensitiveOption.checked, addItem.editedDelegate.index)
-                        addItem.editedDelegate = null;
+                    if (Boolean(addEditItem.editedDelegate)) {
+                        SettingsModel.updatePattern(colorPatternInput.displayText, colorPicker.patternColor, caseSensitiveOption.checked, addEditItem.editedDelegate.index)
+                        addEditItem.editedDelegate = null;
                     } else {
                         SettingsModel.addPattern(colorPatternInput.displayText, colorPicker.patternColor, caseSensitiveOption.checked);
                         colorPatternInput.clear();
@@ -201,34 +201,34 @@ Rectangle {
 
             Button {
                 id: deletePattern
-                anchors.top: addItemOptionsRow.top
-                anchors.bottom: addItemOptionsRow.bottom
+                anchors.top: addEditItemOptionsRow.top
+                anchors.bottom: addEditItemOptionsRow.bottom
                 text: "Delete Pattern"
                 visible: false
-                onClicked: SettingsModel.deletePattern(addItem.editedDelegate?.index ?? -1)
+                onClicked: SettingsModel.deletePattern(addEditItem.editedDelegate?.index ?? -1)
             }
 
             Button {
                 id: exitEdit
-                anchors.top: addItemOptionsRow.top
-                anchors.bottom: addItemOptionsRow.bottom
+                anchors.top: addEditItemOptionsRow.top
+                anchors.bottom: addEditItemOptionsRow.bottom
                 text: "Exit edit"
                 visible: false
-                onClicked: addItem.editedDelegate = null
+                onClicked: addEditItem.editedDelegate = null
             }
         }
 
         states: [
             State {
-                when: Boolean(addItem.editedDelegate)
+                when: Boolean(addEditItem.editedDelegate)
                 PropertyChanges {
                     deletePattern.visible: true
                     exitEdit.visible: true
                     confirmButton.text: "Confirm edit"
-                    addItemText.text: "Edit color pattern"
-                    colorPicker.patternColor: addItem.editedDelegate.modelData.color
-                    colorPatternInput.text: addItem.editedDelegate.modelData.pattern
-                    caseSensitiveOption.checked: addItem.editedDelegate.modelData.caseSensitive
+                    addEditItemText.text: "Edit color pattern"
+                    colorPicker.patternColor: addEditItem.editedDelegate.modelData.color
+                    colorPatternInput.text: addEditItem.editedDelegate.modelData.pattern
+                    caseSensitiveOption.checked: addEditItem.editedDelegate.modelData.caseSensitive
                 }
             }
         ]
