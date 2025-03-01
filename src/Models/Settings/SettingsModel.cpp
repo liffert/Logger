@@ -83,9 +83,8 @@ void Models::Settings::SettingsModel::openSettings()
 void Models::Settings::SettingsModel::closeSettings()
 {
     const auto& coloringPatterns = m_coloringPatternsModel.getRawData();
-    if (m_lastColoringPatterns != coloringPatterns || true) {
+    if (m_lastColoringPatterns != coloringPatterns) {
         emit coloringPatternsChanged();
-        //m_settings.setValue(QStringLiteral("Test"), QVariant::fromValue(coloringPatterns));
         m_settings.beginWriteArray(QStringLiteral("ColoringPatterns"));
         for (int i = 0; i < coloringPatterns.size(); i++) {
             const auto& pattern = coloringPatterns.at(i);
