@@ -65,6 +65,16 @@ void Models::Settings::SettingsModel::addPattern(const QString& filter, const QC
     m_coloringPatternsModel.pushBack({filter, color, caseSensitive});
 }
 
+void Models::Settings::SettingsModel::deletePattern(int index)
+{
+    m_coloringPatternsModel.remove(index);
+}
+
+void Models::Settings::SettingsModel::updatePattern(const QString& filter, const QColor& color, bool caseSensitive, int index)
+{
+    m_coloringPatternsModel.update(index, {filter, color, caseSensitive});
+}
+
 void Models::Settings::SettingsModel::openSettings()
 {
     m_lastColoringPatterns = m_coloringPatternsModel.getRawData();
@@ -75,6 +85,11 @@ void Models::Settings::SettingsModel::closeSettings()
     if (m_lastColoringPatterns != m_coloringPatternsModel.getRawData()) {
         emit coloringPatternsChanged();
     }
+}
+
+void Models::Settings::SettingsModel::moveColoringPattern(int from, int to)
+{
+    m_coloringPatternsModel.move(from, to);
 }
 
 const QList<Models::Settings::ColoringPattern>& Models::Settings::SettingsModel::coloringPatterns()

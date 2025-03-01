@@ -43,8 +43,11 @@ public:
     //TODO: maybe make formatter class as singleton and use directly from qml
     Q_INVOKABLE QString formatFont(const QFont& font);
     Q_INVOKABLE void addPattern(const QString& filter, const QColor& color, bool caseSensitive);
+    Q_INVOKABLE void deletePattern(int index);
+    Q_INVOKABLE void updatePattern(const QString& filter, const QColor& color, bool caseSensitive, int index);
     Q_INVOKABLE void openSettings();
     Q_INVOKABLE void closeSettings();
+    Q_INVOKABLE void moveColoringPattern(int from, int to);
 
     const QList<ColoringPattern>& coloringPatterns();
     Utility::Models::ListModel<ColoringPattern>* coloringPatternsModel();

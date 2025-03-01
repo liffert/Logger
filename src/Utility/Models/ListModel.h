@@ -24,19 +24,9 @@ public:
     void remove(int index);
     void remove(const DataType& data);
     void remove(const std::function<bool(const DataType&)>& comparator);
+    void move(int from, int to);
     virtual void reset();
     const QList<DataType>& getRawData() const;
-
-    // void move(int from, int to)
-    // {
-    //     const auto moveToBottom = from < to;
-    //     beginMoveRows({}, from, from, {}, to + (moveToBottom ? 1 : 0));
-    //     for (int i = from; moveToBottom ? i < to : i > to; moveToBottom ? i++ : i--) {
-    //         m_data.swapItemsAt(i, i + (moveToBottom ? 1 : -1));
-    //     }
-    //     endMoveRows();
-    //     emit dataChanged(index(from), index(to));
-    // }
 
 protected:
     QList<DataType> m_data;
@@ -46,7 +36,7 @@ protected:
 
 
 //TODO: maybe add automatic roles creation from data type?
-template<typename DataType>
+template <typename DataType>
 inline ListModel<DataType>::ListModel(QObject* parent)
 {
     addUserRole(Qt::DisplayRole, "modelData", [](const auto& value) {
@@ -54,13 +44,13 @@ inline ListModel<DataType>::ListModel(QObject* parent)
     });
 }
 
-template<typename DataType>
+template <typename DataType>
 inline int ListModel<DataType>::rowCount(const QModelIndex& parent) const
 {
     return m_data.size();
 }
 
-template<typename DataType>
+template <typename DataType>
 inline QVariant ListModel<DataType>::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid()) {
@@ -78,20 +68,20 @@ inline QVariant ListModel<DataType>::data(const QModelIndex& index, int role) co
     return {};
 }
 
-template<typename DataType>
+template <typename DataType>
 inline QHash<int, QByteArray> ListModel<DataType>::roleNames() const
 {
     return m_roles;
 }
 
-template<typename DataType>
+template <typename DataType>
 inline void ListModel<DataType>::addUserRole(int role, const QByteArray& name, const std::function<QVariant(const DataType&)>& handler)
 {
     m_roles.insert(role, name);
     m_userRoles.insert(role, handler);
 }
 
-template<typename DataType>
+template <typename DataType>
 inline void ListModel<DataType>::insert(int index, const DataType& data)
 {
     if (index < 0 || index > m_data.size()) {
@@ -103,7 +93,7 @@ inline void ListModel<DataType>::insert(int index, const DataType& data)
     endInsertRows();
 }
 
-template<typename DataType>
+template <typename DataType>
 inline void ListModel<DataType>::update(int index, const DataType& data)
 {
     if (index < 0 || index > m_data.size()) {
@@ -115,13 +105,13 @@ inline void ListModel<DataType>::update(int index, const DataType& data)
     emit dataChanged(modelIndex, modelIndex);
 }
 
-template<typename DataType>
+template <typename DataType>
 inline void ListModel<DataType>::pushBack(const DataType& data)
 {
     insert(rowCount(), data);
 }
 
-template<typename DataType>
+template <typename DataType>
 inline void ListModel<DataType>::pushBack(const QList<DataType>& dataList)
 {
     if (dataList.isEmpty()) {
@@ -136,7 +126,7 @@ inline void ListModel<DataType>::pushBack(const QList<DataType>& dataList)
     endInsertRows();
 }
 
-template<typename DataType>
+template <typename DataType>
 inline void ListModel<DataType>::remove(int index)
 {
     if (index < 0 || index >= m_data.size()) {
@@ -148,7 +138,7 @@ inline void ListModel<DataType>::remove(int index)
     endRemoveRows();
 }
 
-template<typename DataType>
+template <typename DataType>
 inline void ListModel<DataType>::remove(const DataType& data)
 {
     const auto itemIndex = m_data.indexOf(data);
@@ -157,7 +147,7 @@ inline void ListModel<DataType>::remove(const DataType& data)
     }
 }
 
-template<typename DataType>
+template <typename DataType>
 inline void ListModel<DataType>::remove(const std::function<bool(const DataType&)>& comparator)//NOT TESTED
 {
     if (comparator) {
@@ -168,7 +158,19 @@ inline void ListModel<DataType>::remove(const std::function<bool(const DataType&
     }
 }
 
-template<typename DataType>
+template <typename DataType>
+inline void ListModel<DataType>::move(int from, int to)
+{
+    const auto moveToBottom = from < to;
+    beginMoveRows({}, from, from, {}, to + (moveToBottom ? 1 : 0));
+    for (int i = from; moveToBottom ? i < to : i > to; moveToBottom ? i++ : i--) {
+        m_data.swapItemsAt(i, i + (moveToBottom ? 1 : -1));
+    }
+    endMoveRows();
+    emit dataChanged(index(from), index(to));
+}
+
+template <typename DataType>
 inline void ListModel<DataType>::reset()
 {
     beginResetModel();
@@ -176,7 +178,7 @@ inline void ListModel<DataType>::reset()
     endResetModel();
 }
 
-template<typename DataType>
+template <typename DataType>
 inline const QList<DataType>& ListModel<DataType>::getRawData() const
 {
     return m_data;

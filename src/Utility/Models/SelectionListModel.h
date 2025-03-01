@@ -30,11 +30,11 @@ protected:
     std::set<int> m_selectionHelper;
 };
 
-template<Selectable DataType>
+template <Selectable DataType>
 inline SelectionListModel<DataType>::SelectionListModel(QObject* parent) : ListModel<DataType>(parent)
 {}
 
-template<Selectable DataType>
+template <Selectable DataType>
 inline void SelectionListModel<DataType>::reset()
 {
     ListModel<DataType>::beginResetModel();
@@ -43,7 +43,7 @@ inline void SelectionListModel<DataType>::reset()
     ListModel<DataType>::endResetModel();
 }
 
-template<Selectable DataType>
+template <Selectable DataType>
 inline void SelectionListModel<DataType>::updateSelection(int index, bool exclusive, bool value)
 {
     if (index < 0 || index >= ListModel<DataType>::m_data.size()) {
@@ -67,7 +67,7 @@ inline void SelectionListModel<DataType>::updateSelection(int index, bool exclus
     }
 }
 
-template<Selectable DataType>
+template <Selectable DataType>
 inline void SelectionListModel<DataType>::updateSelection(int startIndex, int endIndex, bool exclusive, bool value)
 {
     if (startIndex < 0 || startIndex >= ListModel<DataType>::m_data.size() || endIndex < 0 || endIndex >= ListModel<DataType>::m_data.size()) {
@@ -104,7 +104,7 @@ inline void SelectionListModel<DataType>::updateSelection(int startIndex, int en
     emit ListModel<DataType>::dataChanged(SelectionListModel::index(from), SelectionListModel::index(to));
 }
 
-template<Selectable DataType>
+template <Selectable DataType>
 inline void SelectionListModel<DataType>::resetSelection()
 {
     for (const auto& selectedIndex : m_selectionHelper) {
@@ -119,7 +119,7 @@ inline void SelectionListModel<DataType>::resetSelection()
     m_selectionHelper.clear();
 }
 
-template<Selectable DataType>
+template <Selectable DataType>
 inline const std::set<int> &SelectionListModel<DataType>::getSelection() const
 {
     return m_selectionHelper;
