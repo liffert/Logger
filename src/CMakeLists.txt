@@ -9,11 +9,11 @@ find_package(Qt6 REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
-qt_add_executable(appLoggerEnhanced
+qt_add_executable(Logger
     Main.cpp
 )
 
-qt_add_qml_module(appLoggerEnhanced
+qt_add_qml_module(Logger
     URI LoggerEnhanced
     VERSION 1.0
     QML_FILES
@@ -28,16 +28,16 @@ add_subdirectory(Models/)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.appLoggerEnhanced
-set_target_properties(appLoggerEnhanced PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appLoggerEnhanced
+# explicit, fixed bundle identifier manually though.
+set_target_properties(Logger PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.Logger
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(appLoggerEnhanced
+target_link_libraries(Logger
     PRIVATE
     Qt6::Quick
     Ui_MainViewplugin
@@ -48,16 +48,15 @@ target_link_libraries(appLoggerEnhanced
 )
 
 include(GNUInstallDirs)
-install(TARGETS appLoggerEnhanced
+install(TARGETS Logger
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-
 # Generate the deployment script for the target.
 qt_generate_deploy_qml_app_script(
-    TARGET appLoggerEnhanced
+    TARGET Logger
     OUTPUT_SCRIPT deploy_script
 )
 
