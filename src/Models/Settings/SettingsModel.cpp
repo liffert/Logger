@@ -8,16 +8,16 @@ Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
     m_settings(QStringLiteral("Logger"), QStringLiteral("Settings"))
 {
     updateLogLinesFont(m_settings.value(QStringLiteral("LogLinesFont"), QGuiApplication::font()).value<QFont>());
-    m_coloringPatternsModel.pushBack({
-        {":RQ :", QColor(Qt::magenta)},
-        {":RP :", QColor(Qt::blue)},
-        {":EV :", QColor(Qt::darkCyan)},
-        {"WARN", QColor(QColorConstants::Svg::orange)},
-        {"CRIT", QColor(Qt::red)},
-        {"FATAL", QColor(Qt::darkRed)},
-        {"MYLOG", QColor(Qt::darkGreen)},
-        {"if1verbose", QColor(Qt::darkBlue)}
-    });
+    const auto patternsSize = m_settings.beginReadArray(QStringLiteral("ColoringPatterns"));
+    for (int i = 0; i < patternsSize; i++) {
+        m_settings.setArrayIndex(i);
+        ColoringPattern pattern;
+        pattern.pattern = m_settings.value(QStringLiteral("Pattern")).toString();
+        pattern.color = m_settings.value(QStringLiteral("Color")).value<QColor>();
+        pattern.caseSensitive = m_settings.value(QStringLiteral("CaseSensitive")).toBool();
+        m_coloringPatternsModel.pushBack(pattern);
+    }
+    m_settings.endArray();
 }
 
 Models::Settings::SettingsModel* Models::Settings::SettingsModel::create(QQmlEngine* qmlEngine, QJSEngine* jsEngine)
@@ -82,8 +82,20 @@ void Models::Settings::SettingsModel::openSettings()
 
 void Models::Settings::SettingsModel::closeSettings()
 {
-    if (m_lastColoringPatterns != m_coloringPatternsModel.getRawData()) {
+    const auto& coloringPatterns = m_coloringPatternsModel.getRawData();
+    if (m_lastColoringPatterns != coloringPatterns || true) {
         emit coloringPatternsChanged();
+        //m_settings.setValue(QStringLiteral("Test"), QVariant::fromValue(coloringPatterns));
+        m_settings.beginWriteArray(QStringLiteral("ColoringPatterns"));
+        for (int i = 0; i < coloringPatterns.size(); i++) {
+            const auto& pattern = coloringPatterns.at(i);
+            m_settings.setArrayIndex(i);
+            m_settings.setValue(QStringLiteral("Pattern"), pattern.pattern);
+            m_settings.setValue(QStringLiteral("Color"), pattern.color);
+            m_settings.setValue(QStringLiteral("CaseSensitive"), pattern.caseSensitive);
+        }
+        m_settings.endArray();
+        m_settings.sync();
     }
 }
 
