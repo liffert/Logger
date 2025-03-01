@@ -18,6 +18,7 @@ Rectangle {
 
     height: filterText.implicitHeight + 10
 
+    //TODO_LOW: activity indicator
     Item {
         id: filterItem
         anchors.top: root.top

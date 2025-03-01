@@ -10,6 +10,7 @@
 
 namespace Models::OpenedFiles {
 
+//TODO_LOW: store geometry of views
 struct FileInfo {
     Q_GADGET
     Q_PROPERTY(QString name MEMBER name CONSTANT)

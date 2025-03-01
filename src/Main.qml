@@ -7,6 +7,8 @@ ApplicationWindow {
     id: root
     width: 1800
     height: 900
+    minimumWidth: 800
+    minimumHeight: 600
     visible: true
     title: qsTr("Logger Enhanced")
 
@@ -33,6 +35,4 @@ ApplicationWindow {
     SettingsWindow {
         id: settingsWindow
     }
-
-    //TODO: set minimum height and width
 }

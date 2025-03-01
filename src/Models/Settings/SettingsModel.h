@@ -27,6 +27,7 @@ public:
     friend QDataStream& operator>>(QDataStream& stream, ColoringPattern& object);
 };
 
+//TODO_LOW: store geometry of main window
 class SettingsModel : public QObject {
     Q_OBJECT
     QML_ELEMENT

@@ -11,6 +11,8 @@ Rectangle {
     id: root
     border.width: 2
 
+    //TODO: design check
+    //TODO: scrollbars check
     ListViewEnhanced {
         id: listView
         anchors.left: root.left

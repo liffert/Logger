@@ -65,7 +65,7 @@ SplitView {
 
         SplitView.fillWidth: true
         SplitView.fillHeight: true
-        SplitView.minimumHeight: fullFileView.toolbar.height + 200
+        SplitView.minimumHeight: fullFileView.toolbar.height + 50
 
         model: fileReaderModel.model
 
