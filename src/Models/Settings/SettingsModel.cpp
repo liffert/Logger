@@ -7,17 +7,9 @@ Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
     QObject(parent),
     m_settings(QStringLiteral("Logger"), QStringLiteral("Settings"))
 {
+    qRegisterMetaType<QList<ColoringPattern>>();
     updateLogLinesFont(m_settings.value(QStringLiteral("LogLinesFont"), QGuiApplication::font()).value<QFont>());
-    const auto patternsSize = m_settings.beginReadArray(QStringLiteral("ColoringPatterns"));
-    for (int i = 0; i < patternsSize; i++) {
-        m_settings.setArrayIndex(i);
-        ColoringPattern pattern;
-        pattern.pattern = m_settings.value(QStringLiteral("Pattern")).toString();
-        pattern.color = m_settings.value(QStringLiteral("Color")).value<QColor>();
-        pattern.caseSensitive = m_settings.value(QStringLiteral("CaseSensitive")).toBool();
-        m_coloringPatternsModel.pushBack(pattern);
-    }
-    m_settings.endArray();
+    m_coloringPatternsModel.pushBack(m_settings.value(QStringLiteral("ColoringPatterns")).value<QList<ColoringPattern>>());
 }
 
 Models::Settings::SettingsModel* Models::Settings::SettingsModel::create(QQmlEngine* qmlEngine, QJSEngine* jsEngine)
@@ -83,18 +75,9 @@ void Models::Settings::SettingsModel::openSettings()
 void Models::Settings::SettingsModel::closeSettings()
 {
     const auto& coloringPatterns = m_coloringPatternsModel.getRawData();
-    if (m_lastColoringPatterns != coloringPatterns) {
+    if (m_lastColoringPatterns != coloringPatterns || true) {
         emit coloringPatternsChanged();
-        m_settings.beginWriteArray(QStringLiteral("ColoringPatterns"));
-        for (int i = 0; i < coloringPatterns.size(); i++) {
-            const auto& pattern = coloringPatterns.at(i);
-            m_settings.setArrayIndex(i);
-            m_settings.setValue(QStringLiteral("Pattern"), pattern.pattern);
-            m_settings.setValue(QStringLiteral("Color"), pattern.color);
-            m_settings.setValue(QStringLiteral("CaseSensitive"), pattern.caseSensitive);
-        }
-        m_settings.endArray();
-        m_settings.sync();
+        m_settings.setValue(QStringLiteral("ColoringPatterns"), QVariant::fromValue(coloringPatterns));
     }
 }
 

@@ -22,6 +22,24 @@ public:
     bool caseSensitive = false;
 
     bool operator==(const ColoringPattern&) const = default;
+
+    //TODO: Move outside?
+    friend QDataStream& operator<<(QDataStream& stream, const ColoringPattern& object)
+    {
+        stream << object.pattern;
+        stream << object.color;
+        stream << object.caseSensitive;
+        return stream;
+    }
+
+    //TODO: Move outside?
+    friend QDataStream& operator>>(QDataStream& stream, ColoringPattern& object)
+    {
+        stream >> object.pattern;
+        stream >> object.color;
+        stream >> object.caseSensitive;
+        return stream;
+    }
 };
 
 class SettingsModel : public QObject {

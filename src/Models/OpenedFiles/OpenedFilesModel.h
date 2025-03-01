@@ -10,6 +10,7 @@
 
 namespace Models::OpenedFiles {
 
+//TODO: serialize whole object
 struct FileInfo {
     Q_GADGET
     Q_PROPERTY(QString name MEMBER name CONSTANT)
