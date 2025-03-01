@@ -13,6 +13,8 @@ SplitView {
 
     property alias filterText: fileReaderModel.filter
     property alias filePath: fileReaderModel.filePath
+    property alias fullFileViewAutoScrollEnabled: fullFileView.autoScrollEnabled
+    property alias filteredFileViewAutoScrollEnabled: filteredFileView.autoScrollEnabled
 
     signal processFilter(var filterText)
 
@@ -44,12 +46,9 @@ SplitView {
 
     function toggleAutoScroll() {
         if (internal.lastSelectedView === fullFileView) {
-            fullFileView.toolbar.autoScrollEnabled = !fullFileView.toolbar.autoScrollEnabled;
+            fullFileView.autoScrollEnabled = !fullFileView.autoScrollEnabled;
         } else if (internal.lastSelectedView === filteredFileView) {
-            filteredFileView.toolbar.autoScrollEnabled = !filteredFileView.toolbar.autoScrollEnabled;
-        } else {
-            fullFileView.toolbar.autoScrollEnabled = !fullFileView.toolbar.autoScrollEnabled;
-            filteredFileView.toolbar.autoScrollEnabled = !filteredFileView.toolbar.autoScrollEnabled;
+            filteredFileView.autoScrollEnabled = !filteredFileView.autoScrollEnabled;
         }
     }
 
@@ -93,9 +92,9 @@ SplitView {
 
         Connections {
             target: fileReaderModel
-            enabled: fullFileView.toolbar.autoScrollEnabled
+            enabled: fullFileView.autoScrollEnabled
             function onItemsAdded() {
-                if (fullFileView.toolbar.autoScrollEnabled) {
+                if (fullFileView.autoScrollEnabled) {
                     fullFileView.view.positionViewAtEnd();
                 }
             }
@@ -135,7 +134,7 @@ SplitView {
         }
 
         onItemDoubleClicked: function(item, exclusive) {
-            fullFileView.toolbar.autoScrollEnabled = false;
+            fullFileView.autoScrollEnabled = false;
             fileReaderModel.updateFilteredItemSelection(item.index, exclusive, true);
             fileReaderModel.updateItemSelection(item.lineIndex, true, true);
             fullFileView.view.positionViewAtIndex(item.lineIndex, ListView.Center);
@@ -143,9 +142,9 @@ SplitView {
 
         Connections {
             target: fileReaderModel
-            enabled: filteredFileView.toolbar.autoScrollEnabled
+            enabled: filteredFileView.autoScrollEnabled
             function onItemsAdded() {
-                if (filteredFileView.toolbar.autoScrollEnabled) {
+                if (filteredFileView.autoScrollEnabled) {
                     filteredFileView.view.positionViewAtEnd();
                 }
             }

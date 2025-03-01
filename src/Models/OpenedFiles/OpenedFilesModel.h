@@ -15,11 +15,15 @@ struct FileInfo {
     Q_PROPERTY(QString name MEMBER name CONSTANT)
     Q_PROPERTY(QString path MEMBER path CONSTANT)
     Q_PROPERTY(QString filter MEMBER filter CONSTANT)
+    Q_PROPERTY(bool fullFileViewAutoScrollEnabled MEMBER fullFileViewAutoScrollEnabled CONSTANT)
+    Q_PROPERTY(bool filteredFileViewAutoScrollEnabled MEMBER filteredFileViewAutoScrollEnabled CONSTANT)
 
 public:
     QString name;
     QString path;
     QString filter;
+    bool fullFileViewAutoScrollEnabled = true;
+    bool filteredFileViewAutoScrollEnabled = true;
 
     friend QDataStream& operator<<(QDataStream& stream, const FileInfo& object);
     friend QDataStream& operator>>(QDataStream& stream, FileInfo& object);
@@ -39,6 +43,8 @@ public:
     Q_INVOKABLE void addFilePath(const FileInfo& fileInfo);
     Q_INVOKABLE void stopWatchingFile(int index);
     Q_INVOKABLE void updateFilter(int index, const QString& filter);
+    Q_INVOKABLE void updateFullFileViewAutoScroll(int index, bool value);
+    Q_INVOKABLE void updateFilteredFileViewAutoScroll(int index, bool value);
     Utility::Models::ListModel<FileInfo>* model();
 
 signals:
@@ -59,6 +65,8 @@ inline QDataStream& operator<<(QDataStream& stream, const FileInfo& object)
     stream << object.name;
     stream << object.path;
     stream << object.filter;
+    stream << object.fullFileViewAutoScrollEnabled;
+    stream << object.filteredFileViewAutoScrollEnabled;
     return stream;
 }
 
@@ -67,6 +75,8 @@ inline QDataStream& operator>>(QDataStream& stream, FileInfo& object)
     stream >> object.name;
     stream >> object.path;
     stream >> object.filter;
+    stream >> object.fullFileViewAutoScrollEnabled;
+    stream >> object.filteredFileViewAutoScrollEnabled;
     return stream;
 }
 

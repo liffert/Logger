@@ -11,6 +11,10 @@ import Ui.Components
 Item {
     id: root
 
+    function openNewFile() {
+        tabBar.openNewFile();
+    }
+
     OpenedFilesTabBar {
         id: tabBar
         anchors.left: root.left
@@ -44,8 +48,25 @@ Item {
                 filterText: openedFileView.modelData.filter
 
                 onProcessFilter: function(filterText) {
-                    console.log(filterText);
                     openedFilesModel.updateFilter(openedFileView.index, filterText);
+                }
+
+                Connections {
+                    id: fullFileViewAutoScrollEnabledConnection
+                    target: openedFileView
+                    enabled: false
+                    function onFullFileViewAutoScrollEnabledChanged() {
+                        openedFilesModel.updateFullFileViewAutoScroll(openedFileView.index, openedFileView.fullFileViewAutoScrollEnabled);
+                    }
+                }
+
+                Connections {
+                    id: filteredFileViewAutoScrollEnabledConnection
+                    target: openedFileView
+                    enabled: false
+                    function onFilteredFileViewAutoScrollEnabledChanged() {
+                        openedFilesModel.updateFilteredFileViewAutoScroll(openedFileView.index, openedFileView.filteredFileViewAutoScrollEnabled);
+                    }
                 }
 
                 Connections {
@@ -96,6 +117,13 @@ Item {
                             openedFileView.toggleAutoScroll();
                         }
                     }
+                }
+
+                Component.onCompleted: {
+                    openedFileView.fullFileViewAutoScrollEnabled = openedFileView.modelData.fullFileViewAutoScrollEnabled;
+                    openedFileView.filteredFileViewAutoScrollEnabled = modelData.filteredFileViewAutoScrollEnabled;
+                    fullFileViewAutoScrollEnabledConnection.enabled = true;
+                    filteredFileViewAutoScrollEnabledConnection.enabled = true;
                 }
             }
         }

@@ -6,8 +6,8 @@ import Models
 Window {
     id: root
     title: "Settings"
-    width: 600
-    height: 300
+    width: 1000
+    height: 600
 
     SettingsMainView {
         width: root.width

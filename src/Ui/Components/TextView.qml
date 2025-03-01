@@ -11,6 +11,7 @@ Item {
 
     property alias model: listView.model
     property alias toolbar: toolbar
+    property alias autoScrollEnabled: toolbar.autoScrollEnabled
 
     property Component delegateComponent: null
 
@@ -32,7 +33,7 @@ Item {
 
         onAutoScrollEnabledChanged: {
             if (toolbar.autoScrollEnabled) {
-                listView.positionViewAtEnd()
+                listView.positionViewAtEnd();
             }
         }
     }

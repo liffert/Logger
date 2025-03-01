@@ -19,6 +19,7 @@ public:
     void addUserRole(int role, const QByteArray& name, const std::function<QVariant(const DataType&)>& handler);
     void insert(int index, const DataType& data);
     void update(int index, const DataType& data);
+    void update(int index, const std::function<void(DataType&)>& updater);
     void pushBack(const DataType& data);
     void pushBack(const QList<DataType>& dataList);
     void remove(int index);
@@ -101,6 +102,18 @@ inline void ListModel<DataType>::update(int index, const DataType& data)
         return;
     }
     m_data[index] = data;
+    const auto modelIndex = ListModel::index(index);
+    emit dataChanged(modelIndex, modelIndex);
+}
+
+template<typename DataType>
+inline void ListModel<DataType>::update(int index, const std::function<void(DataType&)>& updater)
+{
+    if (index < 0 || index > m_data.size()) {
+        qWarning() << __PRETTY_FUNCTION__ << " incorrect index provided: " << index;
+        return;
+    }
+    updater(m_data[index]);
     const auto modelIndex = ListModel::index(index);
     emit dataChanged(modelIndex, modelIndex);
 }

@@ -14,6 +14,10 @@ ApplicationWindow {
         Menu {
             title: "File"
             Action {
+                text: "Open file"
+                onTriggered: mainView.openNewFile()
+            }
+            Action {
                 text: "Settings"
                 onTriggered: settingsWindow.show()
             }

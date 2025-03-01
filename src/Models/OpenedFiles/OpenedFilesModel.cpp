@@ -67,15 +67,23 @@ void Models::OpenedFiles::OpenedFilesModel::stopWatchingFile(int index)
 
 void Models::OpenedFiles::OpenedFilesModel::updateFilter(int index, const QString& filter)
 {
-    const auto& openedFiles = m_model.getRawData();
-    if (index < 0 || index >= openedFiles.count()) {
-        qWarning() << __PRETTY_FUNCTION__ << " index is out of bounds: " << index;
-        return;
-    }
+    m_model.update(index, [&filter](auto& data) {
+        data.filter = filter;
+    });
+}
 
-    auto data = openedFiles.at(index);
-    data.filter = filter;
-    m_model.update(index, data);
+void Models::OpenedFiles::OpenedFilesModel::updateFullFileViewAutoScroll(int index, bool value)
+{
+    m_model.update(index, [value](auto& data) {
+        data.fullFileViewAutoScrollEnabled = value;
+    });
+}
+
+void Models::OpenedFiles::OpenedFilesModel::updateFilteredFileViewAutoScroll(int index, bool value)
+{
+    m_model.update(index, [value](auto& data) {
+        data.filteredFileViewAutoScrollEnabled = value;
+    });
 }
 
 Utility::Models::ListModel<Models::OpenedFiles::FileInfo>* Models::OpenedFiles::OpenedFilesModel::model()
