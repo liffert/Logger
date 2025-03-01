@@ -62,12 +62,22 @@ QString Models::Settings::SettingsModel::formatFont(const QFont& font)
 
 void Models::Settings::SettingsModel::addPattern(const QString& filter, const QColor& color, bool caseSensitive)
 {
-    //TODO: add mechanism to save updates by save button?
     m_coloringPatternsModel.pushBack({filter, color, caseSensitive});
-    emit coloringPatternsChanged();
 }
 
-const QList<Models::Settings::ColoringPattern> &Models::Settings::SettingsModel::coloringPatterns()
+void Models::Settings::SettingsModel::openSettings()
+{
+    m_lastColoringPatterns = m_coloringPatternsModel.getRawData();
+}
+
+void Models::Settings::SettingsModel::closeSettings()
+{
+    if (m_lastColoringPatterns != m_coloringPatternsModel.getRawData()) {
+        emit coloringPatternsChanged();
+    }
+}
+
+const QList<Models::Settings::ColoringPattern>& Models::Settings::SettingsModel::coloringPatterns()
 {
     return m_coloringPatternsModel.getRawData();
 }
@@ -76,4 +86,3 @@ Utility::Models::ListModel<Models::Settings::ColoringPattern> *Models::Settings:
 {
     return &m_coloringPatternsModel;
 }
-

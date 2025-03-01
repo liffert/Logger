@@ -20,6 +20,8 @@ public:
     QString pattern;
     QColor color = {Qt::black};
     bool caseSensitive = false;
+
+    bool operator==(const ColoringPattern&) const = default;
 };
 
 class SettingsModel : public QObject {
@@ -41,6 +43,8 @@ public:
     //TODO: maybe make formatter class as singleton and use directly from qml
     Q_INVOKABLE QString formatFont(const QFont& font);
     Q_INVOKABLE void addPattern(const QString& filter, const QColor& color, bool caseSensitive);
+    Q_INVOKABLE void openSettings();
+    Q_INVOKABLE void closeSettings();
 
     const QList<ColoringPattern>& coloringPatterns();
     Utility::Models::ListModel<ColoringPattern>* coloringPatternsModel();
@@ -55,6 +59,7 @@ private:
     QSettings m_settings;
     QFont m_logLinesFont;
     Utility::Models::ListModel<ColoringPattern> m_coloringPatternsModel;
+    QList<ColoringPattern> m_lastColoringPatterns;
 };
 
 }
