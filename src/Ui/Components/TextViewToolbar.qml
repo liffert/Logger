@@ -35,7 +35,7 @@ Rectangle {
             anchors.bottom: filterItem.bottom
         }
 
-        //TODO: Make history of previous searches
+        //TODO_LOW: Make history of previous searches
         TextInput {
             id: filter
             anchors.left: filterText.right

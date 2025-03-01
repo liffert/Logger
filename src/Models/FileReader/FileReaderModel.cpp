@@ -60,6 +60,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 {
     using namespace std::chrono_literals;
 
+    //TODO_LOW: option to set these values on UI?
     constexpr auto updateRate = 50ms;
     constexpr auto threadSleepThreashold = 2s;
 
@@ -270,7 +271,7 @@ Utility::Models::SelectionListModel<Models::FileReader::FilteredLogLine>* Models
 bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force)
 {
     if (force || m_file.size() < m_fileSize) {
-        qInfo() << "Start from beginiing " << m_file.size() << " " << m_fileSize;
+        qInfo() << "Start from beginning " << m_file.size() << " " << m_fileSize;
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         m_stream.seek(0);

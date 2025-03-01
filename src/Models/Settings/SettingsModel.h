@@ -43,7 +43,7 @@ public:
 
     Q_INVOKABLE void updateLogLinesFont(const QFont& value);
     Q_INVOKABLE void resetLogLinesFont();
-    //TODO: maybe make formatter class as singleton and use directly from qml
+    //TODO_LOW: maybe make formatter class as singleton and use directly from qml
     Q_INVOKABLE QString formatFont(const QFont& font);
     Q_INVOKABLE void addPattern(const QString& filter, const QColor& color, bool caseSensitive);
     Q_INVOKABLE void deletePattern(int index);

@@ -55,7 +55,8 @@ public:
     Q_INVOKABLE void selectAllFilteredItems();
     Q_INVOKABLE void deselectItems();
     Q_INVOKABLE void deselectFilteredItems();
-    //TODO: Move copy mechanism to separate thread? Check performance
+    //Copy looks okay in gui thread. Test on 400000 lines gives instant copy. No reason to invest in separate thread copying.
+    //Return here only in case of real issues.
     Q_INVOKABLE void copyToClipboardSelectedItems();
     Q_INVOKABLE void copyToClipboardSelectedFilteredItems();
     Q_INVOKABLE void copyAllItems();

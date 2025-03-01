@@ -32,7 +32,7 @@ Rectangle {
             width: ListView.view.contentWidth
             opacity: Boolean(addEditItem.editedDelegate) && delegate != addEditItem.editedDelegate ? 0.5 : 1.0
 
-            //TODO: reset contentWidth on removing elements
+            //TODO_LOW: reset contentWidth on removing elements
             Row {
                 id: contentLayout
                 height: Math.max(40, patternText.height + 10)

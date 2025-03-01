@@ -34,5 +34,5 @@ ApplicationWindow {
         id: settingsWindow
     }
 
-    //TODO set minimum height and width
+    //TODO: set minimum height and width
 }

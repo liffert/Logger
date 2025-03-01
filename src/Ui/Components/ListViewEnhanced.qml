@@ -12,8 +12,8 @@ ListView {
     flickableDirection: Flickable.AutoFlickDirection
     interactive: false
 
-    //Make scrolling faster.
-    //TODO: Add settings for each scrolling speed.
+    //Custom scrolling to make scrolling faster.
+    //TODO_LOW: Add settings for each scrolling speed.
     WheelHandler {
         target: root
         property: "contentY"

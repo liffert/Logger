@@ -10,7 +10,6 @@ Item {
 
     readonly property int contentPrefferedWidth: Math.max(ListView.view.width, lineIndexItemBackground.width + textItem.width + textItem.anchors.leftMargin)
 
-    //TODO: Maybe think of something better
     property int lineIndex: root.index
     property string text: ""
     property bool isSelected: false

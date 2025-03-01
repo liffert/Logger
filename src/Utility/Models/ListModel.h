@@ -24,7 +24,6 @@ public:
     void pushBack(const QList<DataType>& dataList);
     void remove(int index);
     void remove(const DataType& data);
-    void remove(const std::function<bool(const DataType&)>& comparator);
     void move(int from, int to);
     virtual void reset();
     const QList<DataType>& getRawData() const;
@@ -36,7 +35,8 @@ protected:
 };
 
 
-//TODO: maybe add automatic roles creation from data type?
+//TODO_SUPER_LOW: maybe add automatic roles creation from data type?
+//SUPER_LOW as app almost always needs whole data and only for 1 usecase custom role is needed and it can be set manually
 template <typename DataType>
 inline ListModel<DataType>::ListModel(QObject* parent)
 {
@@ -157,17 +157,6 @@ inline void ListModel<DataType>::remove(const DataType& data)
     const auto itemIndex = m_data.indexOf(data);
     if (itemIndex != -1) {
         remove(itemIndex);
-    }
-}
-
-template <typename DataType>
-inline void ListModel<DataType>::remove(const std::function<bool(const DataType&)>& comparator)//NOT TESTED
-{
-    if (comparator) {
-        const auto iter = std::find_if(m_data.cbegin(), m_data.cend(), comparator);
-        if (iter != m_data.cend()) {
-            remove(std::distance(m_data.cbegin(), iter));
-        }
     }
 }
 
