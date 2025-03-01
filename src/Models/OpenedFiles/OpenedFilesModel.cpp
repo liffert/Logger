@@ -7,7 +7,7 @@ Models::OpenedFiles::OpenedFilesModel::OpenedFilesModel(QObject* parent) :
     m_persistentStorage(QStringLiteral("Logger"), QStringLiteral("FileSystemWatcherSettings")),
     m_fileSystemWatcher(Utility::FileSystemWatcher::instance())
 {
-    //Register for working QSettings serialization properly
+    //Register for properly working QSettings serialization
     qRegisterMetaType<QList<FileInfo>>();
 
     m_model.addUserRole(Qt::UserRole + 1, "name", [](const auto& value) {
@@ -19,7 +19,6 @@ Models::OpenedFiles::OpenedFilesModel::OpenedFilesModel(QObject* parent) :
         addFilePath(file);
     }
     m_currentVisibleIndex = m_persistentStorage.value(QStringLiteral("VisibleIndex")).toInt();
-    emit currentVisibleIndexChanged();
 }
 
 Models::OpenedFiles::OpenedFilesModel::~OpenedFilesModel()

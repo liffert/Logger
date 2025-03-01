@@ -61,6 +61,7 @@ signals:
 
 private:
     SettingsModel(QObject* parent = nullptr);
+    ~SettingsModel();
 
     QSettings m_settings;
     QFont m_logLinesFont;
