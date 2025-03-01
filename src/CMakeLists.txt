@@ -28,7 +28,7 @@ add_subdirectory(Models/)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
+# explicit, fixed bundle identifier manually though.appLoggerEnhanced
 set_target_properties(appLoggerEnhanced PROPERTIES
 #    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appLoggerEnhanced
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -52,4 +52,25 @@ install(TARGETS appLoggerEnhanced
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+
+# Generate the deployment script for the target.
+qt_generate_deploy_qml_app_script(
+    TARGET appLoggerEnhanced
+    OUTPUT_SCRIPT deploy_script
+)
+
+# Call the deployment script on "cmake --install".
+install(SCRIPT ${deploy_script})
+
+#pwd <buildFolder>
+#~/Qt/<version>/gcc_64/bin/qt-cmake ../Logger/src/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<path to deploy>
+#cmake --build .
+#cmake --install .
+
+#Some chunky way to copy themes... Not sure if there are any better solution.
+#Maybe should be copied just manually
+install(DIRECTORY ${Qt6_DIR}/../../../plugins/platformthemes/
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/plugins/platformthemes/
 )
