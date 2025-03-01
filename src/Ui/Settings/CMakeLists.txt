@@ -5,4 +5,6 @@ qt_add_qml_module(Ui_Settings
     QML_FILES
         SettingsWindow.qml
         SettingsMainView.qml
+        ColoringPatternsSetting.qml
+        FontSetting.qml
 )

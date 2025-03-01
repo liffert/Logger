@@ -14,10 +14,12 @@ struct ColoringPattern {
     Q_GADGET
     Q_PROPERTY(QString pattern MEMBER pattern CONSTANT)
     Q_PROPERTY(QColor color MEMBER color CONSTANT)
+    Q_PROPERTY(bool caseSensitive MEMBER caseSensitive CONSTANT)
 
 public:
     QString pattern;
     QColor color = {Qt::black};
+    bool caseSensitive = false;
 };
 
 class SettingsModel : public QObject {
@@ -36,8 +38,10 @@ public:
 
     Q_INVOKABLE void updateLogLinesFont(const QFont& value);
     Q_INVOKABLE void resetLogLinesFont();
-    //TODO: check maybe for utility class formatter?
+    //TODO: maybe make formatter class as singleton and use directly from qml
     Q_INVOKABLE QString formatFont(const QFont& font);
+    Q_INVOKABLE void addPattern(const QString& filter, const QColor& color, bool caseSensitive);
+
     const QList<ColoringPattern>& coloringPatterns();
     Utility::Models::ListModel<ColoringPattern>* coloringPatternsModel();
 

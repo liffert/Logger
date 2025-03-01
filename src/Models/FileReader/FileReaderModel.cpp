@@ -306,7 +306,7 @@ void Models::FileReader::FileReaderModel::triggerRecoloring()
 QColor Models::FileReader::FileReaderModel::getColor(const QString& text, const QList<Settings::ColoringPattern>& patterns) const
 {
     for (const auto& pattern : patterns) {
-        if (text.contains(QRegularExpression(pattern.pattern, QRegularExpression::CaseInsensitiveOption))) {
+        if (text.contains(QRegularExpression(pattern.pattern, pattern.caseSensitive ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption))) {
             return pattern.color;
         }
     }
