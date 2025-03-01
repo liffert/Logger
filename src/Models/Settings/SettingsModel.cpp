@@ -7,7 +7,9 @@ Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
     QObject(parent),
     m_settings(QStringLiteral("Logger"), QStringLiteral("Settings"))
 {
+    //Register for working QSettings serialization properly
     qRegisterMetaType<QList<ColoringPattern>>();
+
     updateLogLinesFont(m_settings.value(QStringLiteral("LogLinesFont"), QGuiApplication::font()).value<QFont>());
     m_coloringPatternsModel.pushBack(m_settings.value(QStringLiteral("ColoringPatterns")).value<QList<ColoringPattern>>());
 }
@@ -75,7 +77,7 @@ void Models::Settings::SettingsModel::openSettings()
 void Models::Settings::SettingsModel::closeSettings()
 {
     const auto& coloringPatterns = m_coloringPatternsModel.getRawData();
-    if (m_lastColoringPatterns != coloringPatterns || true) {
+    if (m_lastColoringPatterns != coloringPatterns) {
         emit coloringPatternsChanged();
         m_settings.setValue(QStringLiteral("ColoringPatterns"), QVariant::fromValue(coloringPatterns));
     }

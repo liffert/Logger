@@ -23,23 +23,8 @@ public:
 
     bool operator==(const ColoringPattern&) const = default;
 
-    //TODO: Move outside?
-    friend QDataStream& operator<<(QDataStream& stream, const ColoringPattern& object)
-    {
-        stream << object.pattern;
-        stream << object.color;
-        stream << object.caseSensitive;
-        return stream;
-    }
-
-    //TODO: Move outside?
-    friend QDataStream& operator>>(QDataStream& stream, ColoringPattern& object)
-    {
-        stream >> object.pattern;
-        stream >> object.color;
-        stream >> object.caseSensitive;
-        return stream;
-    }
+    friend QDataStream& operator<<(QDataStream& stream, const ColoringPattern& object);
+    friend QDataStream& operator>>(QDataStream& stream, ColoringPattern& object);
 };
 
 class SettingsModel : public QObject {
@@ -82,5 +67,21 @@ private:
     Utility::Models::ListModel<ColoringPattern> m_coloringPatternsModel;
     QList<ColoringPattern> m_lastColoringPatterns;
 };
+
+inline QDataStream& operator<<(QDataStream& stream, const ColoringPattern& object)
+{
+    stream << object.pattern;
+    stream << object.color;
+    stream << object.caseSensitive;
+    return stream;
+}
+
+inline QDataStream& operator>>(QDataStream& stream, ColoringPattern& object)
+{
+    stream >> object.pattern;
+    stream >> object.color;
+    stream >> object.caseSensitive;
+    return stream;
+}
 
 }

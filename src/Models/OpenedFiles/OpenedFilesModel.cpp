@@ -7,33 +7,25 @@ Models::OpenedFiles::OpenedFilesModel::OpenedFilesModel(QObject* parent) :
     m_persistentStorage(QStringLiteral("Logger"), QStringLiteral("FileSystemWatcherSettings")),
     m_fileSystemWatcher(Utility::FileSystemWatcher::instance())
 {
+    //Register for working QSettings serialization properly
+    qRegisterMetaType<QList<FileInfo>>();
+
     m_model.addUserRole(Qt::UserRole + 1, "name", [](const auto& value) {
         return QVariant::fromValue(value.name);
     });
 
-    const auto filesSize = m_persistentStorage.beginReadArray(QStringLiteral("Files"));
-    for (int i = 0; i < filesSize; i++) {
-        m_persistentStorage.setArrayIndex(i);
-        auto filePath = m_persistentStorage.value(QStringLiteral("Path")).toString();
-        if (QFile::exists(filePath)) {
-            addFilePath(filePath, m_persistentStorage.value(QStringLiteral("Filter")).toString());
-        }
+    const auto files = m_persistentStorage.value(QStringLiteral("Files")).value<QList<FileInfo>>();
+    for (const auto& file : files) {
+        addFilePath(file);
     }
-    m_persistentStorage.endArray();
+    m_currentVisibleIndex = m_persistentStorage.value(QStringLiteral("VisibleIndex")).toInt();
+    emit currentVisibleIndexChanged();
 }
 
 Models::OpenedFiles::OpenedFilesModel::~OpenedFilesModel()
 {
-    const auto& openedFiles = m_model.getRawData();
-
-    m_persistentStorage.clear();
-    m_persistentStorage.beginWriteArray("Files");
-    for (int i = 0; i < openedFiles.count(); i++) {
-        m_persistentStorage.setArrayIndex(i);
-        m_persistentStorage.setValue(QStringLiteral("Path"), openedFiles.at(i).path);
-        m_persistentStorage.setValue(QStringLiteral("Filter"), openedFiles.at(i).filter);
-    }
-    m_persistentStorage.endArray();
+    m_persistentStorage.setValue(QStringLiteral("Files"), QVariant::fromValue(m_model.getRawData()));
+    m_persistentStorage.setValue(QStringLiteral("VisibleIndex"), m_currentVisibleIndex);
 }
 
 void Models::OpenedFiles::OpenedFilesModel::addFilePath(const QString& path, const QString& filter)
@@ -46,6 +38,15 @@ void Models::OpenedFiles::OpenedFilesModel::addFilePath(const QString& path, con
     });
     m_model.pushBack({getFileName(localPath, amountOfSameFiles), localPath, filter});
     m_fileSystemWatcher.addPath(localPath);
+}
+
+void Models::OpenedFiles::OpenedFilesModel::addFilePath(const FileInfo& fileInfo)
+{
+    const auto& path = fileInfo.path;
+    if (QFile::exists(path)) {
+        m_model.pushBack(fileInfo);
+        m_fileSystemWatcher.addPath(path);
+    }
 }
 
 void Models::OpenedFiles::OpenedFilesModel::stopWatchingFile(int index)
@@ -86,8 +87,5 @@ QString Models::OpenedFiles::OpenedFilesModel::getFileName(const QString& path, 
 {
     QFileInfo fileInfo(path);
     auto result = fileInfo.fileName();
-    if (index > 0) {
-        result.append(QStringLiteral("(%1)").arg(index));
-    }
     return result;
 }

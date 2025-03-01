@@ -40,11 +40,12 @@ Item {
                 required property var modelData
                 required property int index
 
-                filePath: modelData.path
-                onFilterTextChanged: {
-                    if (modelData.filter !== openedFileView.filterText) {
-                        openedFilesModel.updateFilter(index, openedFileView.filterText);
-                    }
+                filePath: openedFileView.modelData.path
+                filterText: openedFileView.modelData.filter
+
+                onProcessFilter: function(filterText) {
+                    console.log(filterText);
+                    openedFilesModel.updateFilter(openedFileView.index, filterText);
                 }
 
                 Connections {
@@ -96,8 +97,6 @@ Item {
                         }
                     }
                 }
-
-                Component.onCompleted: openedFileView.setInitialFilter(openedFileView.modelData.filter)
             }
         }
     }

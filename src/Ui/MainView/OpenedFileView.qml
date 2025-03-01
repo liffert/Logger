@@ -11,12 +11,10 @@ import Ui.Components
 SplitView {
     id: root
 
-    readonly property alias filterText: fileReaderModel.filter
+    property alias filterText: fileReaderModel.filter
     property alias filePath: fileReaderModel.filePath
 
-    function setInitialFilter(filterText) {
-        filteredFileView.toolbar.setInitialFilter(filterText);
-    }
+    signal processFilter(var filterText)
 
     function copy(copyAll) {
         if (copyAll) {
@@ -157,7 +155,7 @@ SplitView {
     Connections {
         target: filteredFileView.toolbar
         function onProcessFilter(filterText) {
-            fileReaderModel.filter = filterText;
+            root.processFilter(filterText);
         }
     }
 
@@ -172,4 +170,6 @@ SplitView {
         id: internal
         property var lastSelectedView: null
     }
+
+    Component.onCompleted: filteredFileView.toolbar.setInitialFilter(fileReaderModel.filter)
 }

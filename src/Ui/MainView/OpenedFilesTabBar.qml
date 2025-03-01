@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtCore
+import Models
 
 
 Item {
@@ -12,7 +13,7 @@ Item {
     height: tabBar.height
 
     readonly property alias currentIndex: tabBar.currentIndex
-    required property var openedFilesModel
+    required property OpenedFilesModel openedFilesModel
 
     function openNewFile() {
         fileDialog.open();
@@ -36,7 +37,7 @@ Item {
                 required property int index
 
                 width: openedFilesTabDelegate.implicitWidth + closeButton.width + 20
-                text: openedFilesTabDelegate.name
+                text: "%1: %2".arg(openedFilesTabDelegate.index + 1).arg(openedFilesTabDelegate.name)
 
                 Button {
                     id: closeButton
@@ -49,10 +50,9 @@ Item {
                 }
             }
 
-            //TODO: Do not do this action on initial openening, only on "openFile" button
             onItemAdded: function(index, item) {
                 if (index === openedFilesRepeater.count - 1) {
-                    tabBar.currentIndex = openedFilesRepeater.count - 1
+                    tabBar.currentIndex = openedFilesRepeater.count - 1;
                 }
             }
         }
@@ -73,5 +73,23 @@ Item {
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         fileMode: FileDialog.OpenFile
         onAccepted: root.openedFilesModel.addFilePath(fileDialog.selectedFile)
+    }
+
+    Connections {
+        id: currentVisibleIndexUpdater
+        target: tabBar
+        enabled: false
+        function onCurrentIndexChanged() {
+            console.log("Test");
+            root.openedFilesModel.currentVisibleIndex = tabBar.currentIndex;
+        }
+    }
+
+    Component.onCompleted: {
+        const indexToSet = root.openedFilesModel.currentVisibleIndex;
+        if (indexToSet >= 0 && indexToSet < tabBar.count) {
+            tabBar.currentIndex = indexToSet;
+        }
+        currentVisibleIndexUpdater.enabled = true;
     }
 }

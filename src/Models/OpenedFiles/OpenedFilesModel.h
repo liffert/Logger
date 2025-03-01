@@ -10,7 +10,6 @@
 
 namespace Models::OpenedFiles {
 
-//TODO: serialize whole object
 struct FileInfo {
     Q_GADGET
     Q_PROPERTY(QString name MEMBER name CONSTANT)
@@ -21,6 +20,9 @@ public:
     QString name;
     QString path;
     QString filter;
+
+    friend QDataStream& operator<<(QDataStream& stream, const FileInfo& object);
+    friend QDataStream& operator>>(QDataStream& stream, FileInfo& object);
 };
 
 class OpenedFilesModel : public QObject {
@@ -28,17 +30,20 @@ class OpenedFilesModel : public QObject {
     QML_ELEMENT
 
     Q_PROPERTY(Utility::Models::ListModel<FileInfo> *model READ model() CONSTANT)
+    Q_PROPERTY(int currentVisibleIndex MEMBER m_currentVisibleIndex NOTIFY currentVisibleIndexChanged)
 
 public:
     OpenedFilesModel(QObject* parent = nullptr);
     ~OpenedFilesModel();
     Q_INVOKABLE void addFilePath(const QString& path, const QString& filter = QLatin1String());
+    Q_INVOKABLE void addFilePath(const FileInfo& fileInfo);
     Q_INVOKABLE void stopWatchingFile(int index);
     Q_INVOKABLE void updateFilter(int index, const QString& filter);
     Utility::Models::ListModel<FileInfo>* model();
 
 signals:
     void fileChanged(const QString& path);
+    void currentVisibleIndexChanged();
 
 private:
     QString getFileName(const QString& path, int index) const;
@@ -46,6 +51,23 @@ private:
     Utility::Models::ListModel<FileInfo> m_model;
     Utility::FileSystemWatcher& m_fileSystemWatcher;
     QSettings m_persistentStorage;
+    int m_currentVisibleIndex = -1;
 };
+
+inline QDataStream& operator<<(QDataStream& stream, const FileInfo& object)
+{
+    stream << object.name;
+    stream << object.path;
+    stream << object.filter;
+    return stream;
+}
+
+inline QDataStream& operator>>(QDataStream& stream, FileInfo& object)
+{
+    stream >> object.name;
+    stream >> object.path;
+    stream >> object.filter;
+    return stream;
+}
 
 }
