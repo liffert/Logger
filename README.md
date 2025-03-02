@@ -1,6 +1,7 @@
 # Logger
 
 Log viewer application
+ALPHA VERSION
 
 # Requirements
 Qt 6.5+
