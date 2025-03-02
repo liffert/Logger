@@ -15,3 +15,5 @@ At this point your should have working application inside build folder which can
 If you want to have standalone application without dependencies on your current Qt install, proceed with installation process
 
 5) cmake --install .
+
+At this point you will have standalone application which can be run by ./pathToFolderForInstallation/bin/Logger
