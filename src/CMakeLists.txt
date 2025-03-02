@@ -54,22 +54,17 @@ install(TARGETS Logger
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-# Generate the deployment script for the target.
+# Generate the deployment script
 qt_generate_deploy_qml_app_script(
     TARGET Logger
     OUTPUT_SCRIPT deploy_script
+    NO_TRANSLATIONS
+)
+
+#Some chunky way to copy themes plugin... Not sure if there are any better solution.
+install(DIRECTORY ${CMAKE_PREFIX_PATH}/plugins/platformthemes
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/plugins
 )
 
 # Call the deployment script on "cmake --install".
 install(SCRIPT ${deploy_script})
-
-#pwd <buildFolder>
-#cmake <localPath>/Logger/src/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=<pathToQt/version/compiler> -DCMAKE_INSTALL_PREFIX=<path to deploy>
-#cmake --build .
-#cmake --install .
-
-#Some chunky way to copy themes... Not sure if there are any better solution.
-#Maybe should be copied just manually
-install(DIRECTORY ${CMAKE_PREFIX_PATH}/plugins/platformthemes/
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/plugins/platformthemes/
-)
