@@ -64,12 +64,12 @@ qt_generate_deploy_qml_app_script(
 install(SCRIPT ${deploy_script})
 
 #pwd <buildFolder>
-#~/Qt/<version>/gcc_64/bin/qt-cmake ../Logger/src/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<path to deploy>
+#cmake <localPath>/Logger/src/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=<pathToQt/version/compiler> -DCMAKE_INSTALL_PREFIX=<path to deploy>
 #cmake --build .
 #cmake --install .
 
 #Some chunky way to copy themes... Not sure if there are any better solution.
 #Maybe should be copied just manually
-install(DIRECTORY ${Qt6_DIR}/../../../plugins/platformthemes/
+install(DIRECTORY ${CMAKE_PREFIX_PATH}/plugins/platformthemes/
     DESTINATION ${CMAKE_INSTALL_PREFIX}/plugins/platformthemes/
 )
