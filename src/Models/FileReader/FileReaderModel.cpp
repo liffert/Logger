@@ -167,6 +167,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     }
                     m_currentModelSize++;
                 }
+                m_fileSize = m_file.size();
             }
 
             //Update only with some rate. Sleep the thread only after threashold passed, because
