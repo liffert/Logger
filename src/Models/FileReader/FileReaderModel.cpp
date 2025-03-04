@@ -9,7 +9,6 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
     m_fileWatcher(Utility::FileSystemWatcher::instance())
 {
-    //TODO: Fix rewrite detection
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_file.fileName()) {
             if (m_fileMutex.try_lock()) {
@@ -63,7 +62,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
     //TODO_LOW: option to set these values on UI?
     constexpr auto updateRate = 50ms;
-    constexpr auto threadSleepThreashold = 2s;
+    constexpr auto threadSleepThreashold = 20000s;
 
     QList<Settings::ColoringPattern> coloringPatterns;
     QMetaObject::invokeMethod(this, [this]() {
@@ -71,12 +70,17 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(coloringPatterns), coloringPatterns));
 
     m_currentModelSize = 0;
+    bool logWakeUp = true;
 
     std::unique_lock lock(m_fileMutex);
     while (true) {
         m_allowReading.wait(lock, [this, &stopToken]() {
             return (m_file.isOpen() && !m_stream.atEnd()) || m_refilter || m_recolor || stopToken.stop_requested();
         });
+        if (logWakeUp) {
+            qInfo() << "thread wake up: " << m_filePath;
+            logWakeUp = false;
+        }
 
         QList<LogLine> items;
         QList<FilteredLogLine> filteredItems;
@@ -191,6 +195,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 startReadingPoint = currentReadingPoint;
             } else if (timePassed >= threadSleepThreashold && m_stream.atEnd()) {
                 qInfo() << "Thread sleep waiting for file update " << m_filePath;
+                logWakeUp = true;
                 break;
             }
         }
@@ -275,9 +280,10 @@ Utility::Models::SelectionListModel<Models::FileReader::FilteredLogLine>* Models
 
 bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force)
 {
-    const auto result = force || m_file.size() < m_fileSize;
+    const auto currentSize = m_file.size();
+    const auto result = force || (currentSize < m_fileSize);
     if (result) {
-        qInfo() << "Start from beginning " << m_file.size() << " " << m_fileSize;
+        qInfo() << __PRETTY_FUNCTION__ << currentSize << " " << m_fileSize;
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         m_stream.seek(0);
@@ -285,7 +291,7 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
         m_recolor = false;
         m_currentModelSize = 0;
     }
-    m_fileSize = m_file.size();
+    m_fileSize = currentSize;
     return result;
 }
 
