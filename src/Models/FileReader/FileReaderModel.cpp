@@ -9,6 +9,7 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
     m_fileWatcher(Utility::FileSystemWatcher::instance())
 {
+    //TODO: Fix rewrite detection
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_file.fileName()) {
             if (m_fileMutex.try_lock()) {
@@ -91,7 +92,11 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     return;
                 }
 
-                startFromTheBeginningIfNeeded(true);
+                if(startFromTheBeginningIfNeeded(true)) {
+                    items.clear();
+                    filteredItems.clear();
+                }
+
                 QMetaObject::invokeMethod(this, [this, &coloringPatterns]() {
                     return Settings::SettingsModel::instance().coloringPatterns();
                 }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(coloringPatterns), coloringPatterns));
@@ -167,7 +172,6 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     }
                     m_currentModelSize++;
                 }
-                m_fileSize = m_file.size();
             }
 
             //Update only with some rate. Sleep the thread only after threashold passed, because
@@ -186,7 +190,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 filteredItems.clear();
                 startReadingPoint = currentReadingPoint;
             } else if (timePassed >= threadSleepThreashold && m_stream.atEnd()) {
-                qInfo() << "Thread sleep waiting for file update";
+                qInfo() << "Thread sleep waiting for file update " << m_filePath;
                 break;
             }
         }
@@ -271,18 +275,18 @@ Utility::Models::SelectionListModel<Models::FileReader::FilteredLogLine>* Models
 
 bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force)
 {
-    if (force || m_file.size() < m_fileSize) {
+    const auto result = force || m_file.size() < m_fileSize;
+    if (result) {
         qInfo() << "Start from beginning " << m_file.size() << " " << m_fileSize;
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         m_stream.seek(0);
         m_refilter = false;
         m_recolor = false;
-        m_fileSize = m_file.size();
         m_currentModelSize = 0;
-        return true;
     }
-    return false;
+    m_fileSize = m_file.size();
+    return result;
 }
 
 void Models::FileReader::FileReaderModel::triggerRefiltering()
