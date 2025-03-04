@@ -14,8 +14,8 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
             if (m_fileMutex.try_lock()) {
                 startFromTheBeginningIfNeeded(false);
                 m_fileMutex.unlock();
+                m_allowReading.notify_one();
             }
-            m_allowReading.notify_one();
         }
     });
 
@@ -62,7 +62,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
     //TODO_LOW: option to set these values on UI?
     constexpr auto updateRate = 50ms;
-    constexpr auto threadSleepThreashold = 20000s;
+    constexpr auto threadSleepThreashold = 2s;
 
     QList<Settings::ColoringPattern> coloringPatterns;
     QMetaObject::invokeMethod(this, [this]() {
