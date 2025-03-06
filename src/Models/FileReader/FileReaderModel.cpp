@@ -12,9 +12,7 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_filePath) {
             if (m_fileMutex.try_lock()) {
-                if (m_fileInfo.size() < m_fileSize) {
-                    m_restart = true;
-                }
+                m_resumeThread = true;
                 m_fileMutex.unlock();
                 m_allowReading.notify_one();
             }
@@ -42,8 +40,6 @@ void Models::FileReader::FileReaderModel::openFile()
         qInfo() << __PRETTY_FUNCTION__ << " file path is empty";
         return;
     }
-
-    m_fileInfo.setFile(m_filePath);
 
     m_threadFinished = false;
     m_thread = std::jthread([this, filePath = m_filePath](const std::stop_token& stopToken) {
@@ -78,14 +74,15 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     std::unique_lock lock(m_fileMutex);
     while (true) {
         m_allowReading.wait(lock, [this, &stopToken, &file, &stream]() {
-            return (file.isOpen() && !stream.atEnd()) || m_refilter || m_recolor || stopToken.stop_requested() || m_restart;
+            return (file.isOpen() && !stream.atEnd()) || m_refilter || m_recolor || m_resumeThread || stopToken.stop_requested();
         });
 
         qInfo() << "thread wake up: " << filePath;
 
-        if (m_restart) {
-            startFromTheBeginningIfNeeded(true, stream, file);
-            m_restart = false;
+        if (m_resumeThread) {
+            //TODO: do we really need to try restart here or it is redundant?
+            startFromTheBeginningIfNeeded(false, stream, file);
+            m_resumeThread = false;
         }
 
         QList<LogLine> items;

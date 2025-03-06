@@ -3,7 +3,6 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QFile>
-#include <QFileInfo>
 #include <QColor>
 #include <condition_variable>
 #include <mutex>
@@ -93,8 +92,6 @@ private:
     template<typename DataType>
     void selectAll(Utility::Models::SelectionListModel<DataType>& model);
 
-    QFileInfo m_fileInfo;
-
     Utility::FileSystemWatcher& m_fileWatcher;
     Utility::Models::SelectionListModel<LogLine> m_model;
     Utility::Models::SelectionListModel<FilteredLogLine> m_filteredModel;
@@ -108,7 +105,7 @@ private:
     std::atomic<bool> m_refilter = false;
     std::atomic<bool> m_recolor = false;
     std::atomic<bool> m_threadFinished = true;
-    std::atomic<bool> m_restart = false;
+    std::atomic<bool> m_resumeThread = false;
 
     int m_fileSize = 0;
     int m_currentModelSize = 0;
