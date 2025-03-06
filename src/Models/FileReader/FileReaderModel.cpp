@@ -68,7 +68,8 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     file.setFileName(filePath);
     file.open(QIODevice::ReadOnly);
     QTextStream stream(&file);
-    QString currentFilter;
+
+    QString currentFilter = filter();
 
     startFromTheBeginningIfNeeded(true, stream, file);
 
@@ -83,7 +84,6 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
         }
 
         qInfo() << "thread wake up: " << filePath;
-        currentFilter = filter();
         QList<LogLine> items;
         QList<FilteredLogLine> filteredItems;
         auto startReadingPoint = std::chrono::steady_clock::now();
@@ -97,6 +97,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 if (stopToken.stop_requested()) {
                     return;
                 }
+                m_recolor = false;
 
                 if(startFromTheBeginningIfNeeded(true, stream, file)) {
                     items.clear();
@@ -167,6 +168,9 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
             if (startFromTheBeginningIfNeeded(false, stream, file)) {
                 items.clear();
                 filteredItems.clear();
+                //To make sure that when we are starting from the beginning new filter and coloring patterns will be used without overhead
+                //if such request were made.
+                continue;
             };
 
             if (!stream.atEnd()) {
@@ -304,8 +308,6 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
         stream.seek(0);
-        m_refilter = false;
-        m_recolor = false;
         m_currentModelSize = 0;
     }
     m_fileSize = currentSize;
