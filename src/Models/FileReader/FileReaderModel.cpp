@@ -12,7 +12,6 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_filePath) {
             if (m_fileMutex.try_lock()) {
-                m_resumeThread = true;
                 m_fileMutex.unlock();
                 m_allowReading.notify_one();
             }
@@ -74,16 +73,10 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     std::unique_lock lock(m_fileMutex);
     while (true) {
         m_allowReading.wait(lock, [this, &stopToken, &file, &stream]() {
-            return (file.isOpen() && !stream.atEnd()) || m_refilter || m_recolor || m_resumeThread || stopToken.stop_requested();
+            return (file.isOpen() && !stream.atEnd()) || m_refilter || m_recolor || stopToken.stop_requested();
         });
 
         qInfo() << "thread wake up: " << filePath;
-
-        if (m_resumeThread) {
-            //TODO: do we really need to try restart here or it is redundant?
-            startFromTheBeginningIfNeeded(false, stream, file);
-            m_resumeThread = false;
-        }
 
         QList<LogLine> items;
         QList<FilteredLogLine> filteredItems;
