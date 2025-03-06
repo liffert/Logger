@@ -110,6 +110,7 @@ private:
     std::atomic<bool> m_refilter = false;
     std::atomic<bool> m_recolor = false;
     std::atomic<bool> m_threadFinished = true;
+    bool m_forceOneThreadLoop = false;
 
     int m_fileSize = 0;
     int m_currentModelSize = 0;

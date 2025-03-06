@@ -13,6 +13,7 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
         if (path == m_filePath) {
             if (m_fileMutex.try_lock()) {
                 m_fileMutex.unlock();
+                m_forceOneThreadLoop = true;
                 m_allowReading.notify_one();
             }
         }
@@ -74,8 +75,12 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     std::unique_lock lock(m_fileMutex);
     while (true) {
         m_allowReading.wait(lock, [this, &stopToken, &file, &stream]() {
-            return (file.isOpen() && !stream.atEnd()) || m_refilter || m_recolor || stopToken.stop_requested();
+            return (file.isOpen() && !stream.atEnd()) || m_refilter || m_recolor || m_forceOneThreadLoop || stopToken.stop_requested();
         });
+
+        if (m_forceOneThreadLoop) {
+            m_forceOneThreadLoop = false;
+        }
 
         qInfo() << "thread wake up: " << filePath;
         currentFilter = filter();
