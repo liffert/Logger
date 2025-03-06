@@ -6,6 +6,7 @@
 #include <QColor>
 #include <condition_variable>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <atomic>
 #include "Models/SelectionListModel.h"
@@ -40,7 +41,7 @@ class FileReaderModel : public QObject {
 
     Q_PROPERTY(Utility::Models::SelectionListModel<LogLine> *model READ model() CONSTANT)
     Q_PROPERTY(Utility::Models::SelectionListModel<FilteredLogLine> *filteredModel READ filteredModel() CONSTANT)
-    Q_PROPERTY(QString filter MEMBER m_filter NOTIFY filterChanged)
+    Q_PROPERTY(QString filter READ filter WRITE setFilter NOTIFY filterChanged)
     Q_PROPERTY(QString filePath MEMBER m_filePath NOTIFY filePathChanged)
 
 public:
@@ -61,6 +62,9 @@ public:
     Q_INVOKABLE void copyToClipboardSelectedFilteredItems();
     Q_INVOKABLE void copyAllItems();
 
+    void setFilter(const QString& filter);
+    const QString& filter() const;
+
     Utility::Models::SelectionListModel<LogLine>* model();
     Utility::Models::SelectionListModel<FilteredLogLine>* filteredModel();
 
@@ -77,7 +81,7 @@ private:
     void releaseCurrentFile();
     void resetModel();
     void resetFilteredModel();
-    bool isTextContainsFilter(const QString& text);
+    bool isTextContainsFilter(const QString& text, const QString& filter);
     bool startFromTheBeginningIfNeeded(bool force, QTextStream& stream, const QFile& file);
     void triggerRefiltering();
     void triggerRecoloring();
@@ -95,11 +99,12 @@ private:
     Utility::FileSystemWatcher& m_fileWatcher;
     Utility::Models::SelectionListModel<LogLine> m_model;
     Utility::Models::SelectionListModel<FilteredLogLine> m_filteredModel;
-    QString m_filter;//TODO: make thread safe
+    QString m_filter;
     QString m_filePath;
     QString m_fileName;
 
     std::mutex m_fileMutex;
+    mutable std::shared_mutex m_filterMutex;
     std::jthread m_thread;
     std::condition_variable m_allowReading;
     std::atomic<bool> m_refilter = false;

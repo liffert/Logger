@@ -67,6 +67,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     file.setFileName(filePath);
     file.open(QIODevice::ReadOnly);
     QTextStream stream(&file);
+    QString currentFilter;
 
     startFromTheBeginningIfNeeded(true, stream, file);
 
@@ -77,7 +78,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
         });
 
         qInfo() << "thread wake up: " << filePath;
-
+        currentFilter = filter();
         QList<LogLine> items;
         QList<FilteredLogLine> filteredItems;
         auto startReadingPoint = std::chrono::steady_clock::now();
@@ -109,9 +110,10 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
                 m_refilter = false;
                 filteredItems.clear();
+                currentFilter = filter();
                 QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
 
-                if (m_filter.isEmpty()) {
+                if (currentFilter.isEmpty()) {
                     break;
                 }
 
@@ -141,7 +143,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
                     const auto& item = data.at(i);
                     const auto& text = item.text;
-                    if (isTextContainsFilter(text)) {
+                    if (isTextContainsFilter(text, currentFilter)) {
                         filteredItems.push_back({text, false, item.color, i});
                     }
 
@@ -167,7 +169,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 if (!text.isEmpty()) {
                     const auto color = getColor(text, coloringPatterns);
                     items.push_back({.text = text, .color = color});
-                    if (isTextContainsFilter(text)) {
+                    if (isTextContainsFilter(text, currentFilter)) {
                         filteredItems.push_back({text, false, color, m_currentModelSize});
                     }
                     m_currentModelSize++;
@@ -263,6 +265,21 @@ void Models::FileReader::FileReaderModel::copyAllItems()
     copyToClipBoard(modelSelection, m_model.getRawData());
 }
 
+void Models::FileReader::FileReaderModel::setFilter(const QString& filter)
+{
+    std::lock_guard lock(m_filterMutex);
+    if (m_filter != filter) {
+        m_filter = filter;
+        emit filterChanged();
+    }
+}
+
+const QString& Models::FileReader::FileReaderModel::filter() const
+{
+    std::shared_lock readLock(m_filterMutex);
+    return m_filter;
+}
+
 Utility::Models::SelectionListModel<Models::FileReader::LogLine>* Models::FileReader::FileReaderModel::model()
 {
     return &m_model;
@@ -339,9 +356,9 @@ void Models::FileReader::FileReaderModel::resetFilteredModel()
     emit filteredModelReset();
 }
 
-bool Models::FileReader::FileReaderModel::isTextContainsFilter(const QString &text)
+bool Models::FileReader::FileReaderModel::isTextContainsFilter(const QString &text, const QString& filter)
 {
-    return !m_filter.isEmpty() && text.contains(QRegularExpression(m_filter, QRegularExpression::CaseInsensitiveOption));
+    return !filter.isEmpty() && text.contains(QRegularExpression(m_filter, QRegularExpression::CaseInsensitiveOption));
 }
 
 template<typename DataType>
