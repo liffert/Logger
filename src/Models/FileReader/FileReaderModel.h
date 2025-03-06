@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QFile>
+#include <QFileInfo>
 #include <QColor>
 #include <condition_variable>
 #include <mutex>
@@ -73,12 +74,12 @@ signals:
 
 private:
     void openFile();
-    void processFile(const std::stop_token& stopToken);
+    void processFile(const std::stop_token& stopToken, const QString& filePath);
     void releaseCurrentFile();
     void resetModel();
     void resetFilteredModel();
     bool isTextContainsFilter(const QString& text);
-    bool startFromTheBeginningIfNeeded(bool force);
+    bool startFromTheBeginningIfNeeded(bool force, QTextStream& stream, const QFile& file);
     void triggerRefiltering();
     void triggerRecoloring();
     QColor getColor(const QString& text, const QList<Settings::ColoringPattern>& patterns) const;
@@ -92,8 +93,7 @@ private:
     template<typename DataType>
     void selectAll(Utility::Models::SelectionListModel<DataType>& model);
 
-    QFile m_file;
-    QTextStream m_stream;
+    QFileInfo m_fileInfo;
 
     Utility::FileSystemWatcher& m_fileWatcher;
     Utility::Models::SelectionListModel<LogLine> m_model;
@@ -108,6 +108,7 @@ private:
     std::atomic<bool> m_refilter = false;
     std::atomic<bool> m_recolor = false;
     std::atomic<bool> m_threadFinished = true;
+    std::atomic<bool> m_restart = false;
 
     int m_fileSize = 0;
     int m_currentModelSize = 0;

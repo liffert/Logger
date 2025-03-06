@@ -10,9 +10,11 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     m_fileWatcher(Utility::FileSystemWatcher::instance())
 {
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
-        if (path == m_file.fileName()) {
+        if (path == m_filePath) {
             if (m_fileMutex.try_lock()) {
-                startFromTheBeginningIfNeeded(false);
+                if (m_fileInfo.size() < m_fileSize) {
+                    m_restart = true;
+                }
                 m_fileMutex.unlock();
                 m_allowReading.notify_one();
             }
@@ -41,22 +43,18 @@ void Models::FileReader::FileReaderModel::openFile()
         return;
     }
 
-    m_file.setFileName(m_filePath);
-    m_file.open(QIODevice::ReadOnly);
-
-    m_stream.setDevice(&m_file);
-    startFromTheBeginningIfNeeded(true);
+    m_fileInfo.setFile(m_filePath);
 
     m_threadFinished = false;
-    m_thread = std::jthread([this](const std::stop_token& stopToken) {
-        processFile(stopToken);
+    m_thread = std::jthread([this, filePath = m_filePath](const std::stop_token& stopToken) {
+        processFile(stopToken, filePath);
         //Atomic flag loModels/oks quite ugly. Maybe to use std::packaged_task with std::future,
         //but in general from performance perspective it will not be any better...
         m_threadFinished = true;
     });
 }
 
-void Models::FileReader::FileReaderModel::processFile(const std::stop_token& stopToken)
+void Models::FileReader::FileReaderModel::processFile(const std::stop_token& stopToken, const QString& filePath)
 {
     using namespace std::chrono_literals;
 
@@ -69,17 +67,25 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
         return Settings::SettingsModel::instance().coloringPatterns();
     }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(coloringPatterns), coloringPatterns));
 
-    m_currentModelSize = 0;
-    bool logWakeUp = true;
+
+    QFile file;
+    file.setFileName(filePath);
+    file.open(QIODevice::ReadOnly);
+    QTextStream stream(&file);
+
+    startFromTheBeginningIfNeeded(true, stream, file);
 
     std::unique_lock lock(m_fileMutex);
     while (true) {
-        m_allowReading.wait(lock, [this, &stopToken]() {
-            return (m_file.isOpen() && !m_stream.atEnd()) || m_refilter || m_recolor || stopToken.stop_requested();
+        m_allowReading.wait(lock, [this, &stopToken, &file, &stream]() {
+            return (file.isOpen() && !stream.atEnd()) || m_refilter || m_recolor || stopToken.stop_requested() || m_restart;
         });
-        if (logWakeUp) {
-            qInfo() << "thread wake up: " << m_filePath;
-            logWakeUp = false;
+
+        qInfo() << "thread wake up: " << filePath;
+
+        if (m_restart) {
+            startFromTheBeginningIfNeeded(true, stream, file);
+            m_restart = false;
         }
 
         QList<LogLine> items;
@@ -96,7 +102,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     return;
                 }
 
-                if(startFromTheBeginningIfNeeded(true)) {
+                if(startFromTheBeginningIfNeeded(true, stream, file)) {
                     items.clear();
                     filteredItems.clear();
                 }
@@ -137,7 +143,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                         break;
                     }
 
-                    if (startFromTheBeginningIfNeeded(false)) {
+                    if (startFromTheBeginningIfNeeded(false, stream, file)) {
                         items.clear();
                         filteredItems.clear();
                         break;
@@ -161,13 +167,13 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 }
             }
 
-            if (startFromTheBeginningIfNeeded(false)) {
+            if (startFromTheBeginningIfNeeded(false, stream, file)) {
                 items.clear();
                 filteredItems.clear();
             };
 
-            if (!m_stream.atEnd()) {
-                const auto text = m_stream.readLine();
+            if (!stream.atEnd()) {
+                const auto text = stream.readLine();
                 if (!text.isEmpty()) {
                     const auto color = getColor(text, coloringPatterns);
                     items.push_back({.text = text, .color = color});
@@ -193,9 +199,8 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 items.clear();
                 filteredItems.clear();
                 startReadingPoint = currentReadingPoint;
-            } else if (timePassed >= threadSleepThreashold && m_stream.atEnd()) {
-                qInfo() << "Thread sleep waiting for file update " << m_filePath;
-                logWakeUp = true;
+            } else if (timePassed >= threadSleepThreashold && stream.atEnd()) {
+                qInfo() << "Thread sleep waiting for file update " << filePath;
                 break;
             }
         }
@@ -278,15 +283,15 @@ Utility::Models::SelectionListModel<Models::FileReader::FilteredLogLine>* Models
     return &m_filteredModel;
 }
 
-bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force)
+bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force, QTextStream& stream, const QFile& file)
 {
-    const auto currentSize = m_file.size();
+    const auto currentSize = file.size();
     const auto result = force || (currentSize < m_fileSize);
     if (result) {
         qInfo() << __PRETTY_FUNCTION__ << currentSize << " " << m_fileSize;
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
-        m_stream.seek(0);
+        stream.seek(0);
         m_refilter = false;
         m_recolor = false;
         m_currentModelSize = 0;
@@ -297,21 +302,17 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
 
 void Models::FileReader::FileReaderModel::triggerRefiltering()
 {
-    if (m_file.isOpen()) {
-        if (!m_refilter) {
-            m_refilter = true;
-            m_allowReading.notify_one();
-        }
+    if (!m_refilter) {
+        m_refilter = true;
+        m_allowReading.notify_one();
     }
 }
 
 void Models::FileReader::FileReaderModel::triggerRecoloring()
 {
-    if (m_file.isOpen()) {
-        if (!m_recolor) {
-            m_recolor = true;
-            m_allowReading.notify_one();
-        }
+    if (!m_recolor) {
+        m_recolor = true;
+        m_allowReading.notify_one();
     }
 }
 
@@ -334,8 +335,6 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
     while (!m_threadFinished) {
         qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
     }
-    m_file.close();
-    m_refilter = false;
 }
 
 void Models::FileReader::FileReaderModel::resetModel()
