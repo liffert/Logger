@@ -61,10 +61,15 @@ signals:
     void coloringPatternsChanged();
 
 private:
+    struct PersistentStorageKeys {
+        static const QString COLORING_PATTERNS_KEY;
+        static const QString LOG_LINES_FONT_KEY;
+    };
+
     SettingsModel(QObject* parent = nullptr);
     ~SettingsModel();
 
-    QSettings m_settings;
+    QSettings m_persistentStorage;
     QFont m_logLinesFont;
     Utility::Models::ListModel<ColoringPattern> m_coloringPatternsModel;
     QList<ColoringPattern> m_lastColoringPatterns;

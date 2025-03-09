@@ -3,21 +3,24 @@
 #include <QFont>
 #include "Formatter.h"
 
+const QString Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY = QStringLiteral("ColoringPatterns");
+const QString Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY = QStringLiteral("LogLinesFont");
+
 Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
     QObject(parent),
-    m_settings(QStringLiteral("Logger"), QStringLiteral("Settings"))
+    m_persistentStorage(QStringLiteral("Logger"), QStringLiteral("Settings"))
 {
     //Register for properly working QSettings serialization
     qRegisterMetaType<QList<ColoringPattern>>();
 
-    updateLogLinesFont(m_settings.value(QStringLiteral("LogLinesFont"), QGuiApplication::font()).value<QFont>());
-    m_coloringPatternsModel.pushBack(m_settings.value(QStringLiteral("ColoringPatterns")).value<QList<ColoringPattern>>());
+    updateLogLinesFont(m_persistentStorage.value(Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY, QGuiApplication::font()).value<QFont>());
+    m_coloringPatternsModel.pushBack(m_persistentStorage.value(Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY).value<QList<ColoringPattern>>());
 }
 
 Models::Settings::SettingsModel::~SettingsModel()
 {
-    m_settings.setValue(QStringLiteral("ColoringPatterns"), QVariant::fromValue(m_coloringPatternsModel.getRawData()));
-    m_settings.setValue(QStringLiteral("LogLinesFont"), m_logLinesFont);
+    m_persistentStorage.setValue(Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY, QVariant::fromValue(m_coloringPatternsModel.getRawData()));
+    m_persistentStorage.setValue(Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY, m_logLinesFont);
 }
 
 Models::Settings::SettingsModel* Models::Settings::SettingsModel::create(QQmlEngine* qmlEngine, QJSEngine* jsEngine)

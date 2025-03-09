@@ -388,7 +388,7 @@ void Models::FileReader::FileReaderModel::copyToClipBoard(const std::set<int>& s
     }
 
     auto* clipboard = QGuiApplication::clipboard();
-    clipboard->setText(selectedItems.join("\n"));
+    clipboard->setText(selectedItems.join(QStringLiteral("\n")));
 }
 
 template<typename DataType>

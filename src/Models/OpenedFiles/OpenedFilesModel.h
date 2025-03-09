@@ -53,6 +53,11 @@ signals:
     void currentVisibleIndexChanged();
 
 private:
+    struct PersistentStorageKeys {
+        static const QString FILES_KEY;
+        static const QString VISIBLE_INDEX_KEY;
+    };
+
     QString getFileName(const QString& path, int index) const;
 
     Utility::Models::ListModel<FileInfo> m_model;

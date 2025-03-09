@@ -2,6 +2,9 @@
 #include <QFileInfo>
 #include <QGuiApplication>
 
+const QString Models::OpenedFiles::OpenedFilesModel::PersistentStorageKeys::FILES_KEY = QStringLiteral("Files");
+const QString Models::OpenedFiles::OpenedFilesModel::PersistentStorageKeys::VISIBLE_INDEX_KEY = QStringLiteral("VisibleIndex");
+
 Models::OpenedFiles::OpenedFilesModel::OpenedFilesModel(QObject* parent) :
     QObject(parent),
     m_persistentStorage(QStringLiteral("Logger"), QStringLiteral("FileSystemWatcherSettings")),
@@ -14,17 +17,17 @@ Models::OpenedFiles::OpenedFilesModel::OpenedFilesModel(QObject* parent) :
         return QVariant::fromValue(value.name);
     });
 
-    const auto files = m_persistentStorage.value(QStringLiteral("Files")).value<QList<FileInfo>>();
+    const auto files = m_persistentStorage.value(Models::OpenedFiles::OpenedFilesModel::PersistentStorageKeys::FILES_KEY).value<QList<FileInfo>>();
     for (const auto& file : files) {
         addFilePath(file);
     }
-    m_currentVisibleIndex = m_persistentStorage.value(QStringLiteral("VisibleIndex")).toInt();
+    m_currentVisibleIndex = m_persistentStorage.value(Models::OpenedFiles::OpenedFilesModel::PersistentStorageKeys::VISIBLE_INDEX_KEY).toInt();
 }
 
 Models::OpenedFiles::OpenedFilesModel::~OpenedFilesModel()
 {
-    m_persistentStorage.setValue(QStringLiteral("Files"), QVariant::fromValue(m_model.getRawData()));
-    m_persistentStorage.setValue(QStringLiteral("VisibleIndex"), m_currentVisibleIndex);
+    m_persistentStorage.setValue(Models::OpenedFiles::OpenedFilesModel::PersistentStorageKeys::FILES_KEY, QVariant::fromValue(m_model.getRawData()));
+    m_persistentStorage.setValue(Models::OpenedFiles::OpenedFilesModel::PersistentStorageKeys::VISIBLE_INDEX_KEY, m_currentVisibleIndex);
 }
 
 void Models::OpenedFiles::OpenedFilesModel::addFilePath(const QString& path, const QString& filter)
