@@ -37,16 +37,16 @@ inline SelectionListModel<DataType>::SelectionListModel(QObject* parent) : ListM
 template <Selectable DataType>
 inline void SelectionListModel<DataType>::reset()
 {
-    ListModel<DataType>::beginResetModel();
-    ListModel<DataType>::m_data.clear();
+    this->beginResetModel();
+    this->m_data.clear();
     m_selectionHelper.clear();
-    ListModel<DataType>::endResetModel();
+    this->endResetModel();
 }
 
 template <Selectable DataType>
 inline void SelectionListModel<DataType>::updateSelection(int index, bool exclusive, bool value)
 {
-    if (index < 0 || index >= ListModel<DataType>::m_data.size()) {
+    if (index < 0 || index >= this->m_data.size()) {
         qWarning() << __PRETTY_FUNCTION__ << " index is out of bounds: " << index;
         return;
     }
@@ -55,7 +55,7 @@ inline void SelectionListModel<DataType>::updateSelection(int index, bool exclus
         resetSelection();
     }
 
-    auto item = ListModel<DataType>::m_data.at(index);
+    auto item = this->m_data.at(index);
     if (item.selected != value) {
         item.selected = value;
         if (item.selected) {
@@ -63,14 +63,14 @@ inline void SelectionListModel<DataType>::updateSelection(int index, bool exclus
         } else {
             m_selectionHelper.erase(index);
         }
-        ListModel<DataType>::update(index, item);
+        this->update(index, item);
     }
 }
 
 template <Selectable DataType>
 inline void SelectionListModel<DataType>::updateSelection(int startIndex, int endIndex, bool exclusive, bool value)
 {
-    if (startIndex < 0 || startIndex >= ListModel<DataType>::m_data.size() || endIndex < 0 || endIndex >= ListModel<DataType>::m_data.size()) {
+    if (startIndex < 0 || startIndex >= this->m_data.size() || endIndex < 0 || endIndex >= this->m_data.size()) {
         qWarning() << __PRETTY_FUNCTION__ << " some index is out of bounds " << startIndex << " " << endIndex;
         return;
     }
@@ -91,7 +91,7 @@ inline void SelectionListModel<DataType>::updateSelection(int startIndex, int en
     }
 
     for (int i = from; i <= to; i++) {
-        auto& item = ListModel<DataType>::m_data[i];
+        auto& item = this->m_data[i];
         if (item.selected != value) {
             item.selected = value;
             if (item.selected) {
@@ -101,18 +101,18 @@ inline void SelectionListModel<DataType>::updateSelection(int startIndex, int en
             }
         }
     }
-    emit ListModel<DataType>::dataChanged(SelectionListModel::index(from), SelectionListModel::index(to));
+    emit this->dataChanged(SelectionListModel::index(from), SelectionListModel::index(to));
 }
 
 template <Selectable DataType>
 inline void SelectionListModel<DataType>::resetSelection()
 {
     for (const auto& selectedIndex : m_selectionHelper) {
-        if (selectedIndex >= 0 && selectedIndex < ListModel<DataType>::m_data.size()) {
-            auto item = ListModel<DataType>::m_data.at(selectedIndex);
+        if (selectedIndex >= 0 && selectedIndex < this->m_data.size()) {
+            auto item = this->m_data.at(selectedIndex);
             if (item.selected) {
                 item.selected = false;
-                ListModel<DataType>::update(selectedIndex, item);
+                this->update(selectedIndex, item);
             }
         }
     }

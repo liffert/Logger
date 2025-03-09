@@ -32,7 +32,7 @@ Models::FileReader::FileReaderModel::~FileReaderModel()
 void Models::FileReader::FileReaderModel::openFile()
 {
     qInfo() << __PRETTY_FUNCTION__ << " " << m_filePath;
-    if (!m_threadFinished) {
+    if (!m_threadFinished.load(std::memory_order::relaxed)) {
         releaseCurrentFile();
     }
 
@@ -41,12 +41,10 @@ void Models::FileReader::FileReaderModel::openFile()
         return;
     }
 
-    m_threadFinished = false;
+    m_threadFinished.store(false, std::memory_order::relaxed);
     m_thread = std::jthread([this, filePath = m_filePath](const std::stop_token& stopToken) {
         processFile(stopToken, filePath);
-        //Atomic flag loModels/oks quite ugly. Maybe to use std::packaged_task with std::future,
-        //but in general from performance perspective it will not be any better...
-        m_threadFinished = true;
+        m_threadFinished.store(true, std::memory_order::relaxed);
     });
 }
 
@@ -76,7 +74,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     std::unique_lock lock(m_fileMutex);
     while (true) {
         m_allowReading.wait(lock, [this, &stopToken, &file, &stream]() {
-            return (file.isOpen() && !stream.atEnd()) || m_refilter || m_recolor || m_forceOneThreadLoop || stopToken.stop_requested();
+            return (file.isOpen() && !stream.atEnd()) || m_refilter.load(std::memory_order::relaxed) || m_recolor.load(std::memory_order::relaxed) || m_forceOneThreadLoop || stopToken.stop_requested();
         });
 
         if (m_forceOneThreadLoop) {
@@ -93,11 +91,11 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 return;
             }
 
-            while (m_recolor) {
+            while (m_recolor.load(std::memory_order::relaxed)) {
                 if (stopToken.stop_requested()) {
                     return;
                 }
-                m_recolor = false;
+                m_recolor.store(false, std::memory_order::relaxed);
 
                 if(startFromTheBeginningIfNeeded(true, stream, file)) {
                     items.clear();
@@ -109,12 +107,12 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(coloringPatterns), coloringPatterns));
             }
 
-            while (m_refilter) {
+            while (m_refilter.load(std::memory_order::relaxed)) {
                 if (stopToken.stop_requested()) {
                     return;
                 }
 
-                m_refilter = false;
+                m_refilter.store(false, std::memory_order::relaxed);
                 filteredItems.clear();
                 currentFilter = filter();
                 QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
@@ -137,7 +135,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                         return;
                     }
 
-                    if (m_refilter) {
+                    if (m_refilter.load(std::memory_order::relaxed)) {
                         break;
                     }
 
@@ -346,7 +344,7 @@ void Models::FileReader::FileReaderModel::releaseCurrentFile()
     m_allowReading.notify_one();
     //In case if thread stuck in blocking connection, process all events before this gets destroyed to exit from the thread properly.
     //Consired to use AllEvents to make sure that UI is not frozen if it takes too long to die. But as far as it should not, keep it like this for now.
-    while (!m_threadFinished) {
+    while (!m_threadFinished.load(std::memory_order::relaxed)) {
         qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
     }
 }
