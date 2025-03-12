@@ -60,6 +60,7 @@ SplitView {
                                                          : "white"
     }
 
+    //TODO: Show file information information inside the filter field
     TextView {
         id: fullFileView
 

@@ -18,7 +18,7 @@ Item {
 
     Rectangle {
         id: background
-        anchors.fill: root
+        anchors.fill: openedFiles
         color: Style.backgroundColor
     }
 
@@ -37,7 +37,6 @@ Item {
         anchors.right: root.right
         anchors.top: tabBar.bottom
         anchors.bottom: root.bottom
-        anchors.topMargin: Style.verticalMargin
 
         currentIndex: tabBar.currentIndex
 

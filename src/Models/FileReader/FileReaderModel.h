@@ -12,6 +12,7 @@
 #include "Models/SelectionListModel.h"
 #include "FileSystemWatcher.h"
 #include "Settings/SettingsModel.h"
+#include "Style.h"
 
 namespace Models::FileReader {
 
@@ -24,7 +25,7 @@ struct LogLine {
 public:
     QString text;
     bool selected = false;
-    QColor color = {Qt::black};
+    QColor color = Utility::Style::instance().regularTextColor();
 };
 
 struct FilteredLogLine : public LogLine {

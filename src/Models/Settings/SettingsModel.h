@@ -7,6 +7,7 @@
 #include <QColor>
 #include <QFont>
 #include "Models/ListModel.h"
+#include "Style.h"
 
 namespace Models::Settings {
 
@@ -18,7 +19,7 @@ struct ColoringPattern {
 
 public:
     QString pattern;
-    QColor color = {Qt::black};
+    QColor color = Utility::Style::instance().regularTextColor();
     bool caseSensitive = false;
 
     bool operator==(const ColoringPattern&) const = default;

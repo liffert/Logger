@@ -10,21 +10,34 @@ class Style : public QObject {
     QML_ELEMENT
     QML_SINGLETON
 
-    Q_PROPERTY(QColor backgroundColor MEMBER m_backgroundColor CONSTANT)
-    Q_PROPERTY(QColor textBackgroundColor MEMBER m_textBackgroundColor CONSTANT)
-    Q_PROPERTY(QColor highlightColor MEMBER m_highlightColor CONSTANT)
-    Q_PROPERTY(QColor brightTextColor MEMBER m_brightTextColor CONSTANT)
-    Q_PROPERTY(QColor regularTextColor MEMBER m_regularTextColor CONSTANT)
-    Q_PROPERTY(QColor colorPickerBorder MEMBER m_colorPickerBorder CONSTANT)
-    Q_PROPERTY(int horizontalMargin MEMBER m_horizontalMargin CONSTANT)
-    Q_PROPERTY(int verticalMargin MEMBER m_verticalMargin CONSTANT)
-    Q_PROPERTY(int borderWidth MEMBER m_borderWidth CONSTANT)
-    Q_PROPERTY(int filterHeight MEMBER m_filterHeight CONSTANT)
+    Q_PROPERTY(QColor backgroundColor READ backgroundColor CONSTANT)
+    Q_PROPERTY(QColor textBackgroundColor READ textBackgroundColor CONSTANT)
+    Q_PROPERTY(QColor highlightColor READ highlightColor CONSTANT)
+    Q_PROPERTY(QColor brightTextColor READ brightTextColor CONSTANT)
+    Q_PROPERTY(QColor regularTextColor READ regularTextColor CONSTANT)
+    Q_PROPERTY(QColor colorPickerBorder READ colorPickerBorder CONSTANT)
+    Q_PROPERTY(QColor closeButtonColor READ closeButtonColor CONSTANT)
+    Q_PROPERTY(int horizontalMargin READ horizontalMargin CONSTANT)
+    Q_PROPERTY(int verticalMargin READ verticalMargin CONSTANT)
+    Q_PROPERTY(int borderWidth READ borderWidth CONSTANT)
+    Q_PROPERTY(int filterHeight READ filterHeight CONSTANT)
 
 public:
     Q_DISABLE_COPY_MOVE(Style)
     static Style& instance();
     static Style* create(QQmlEngine* qmlEngine, QJSEngine* jsEngine);
+
+    const QColor& backgroundColor() const;
+    const QColor& textBackgroundColor() const;
+    const QColor& highlightColor() const;
+    const QColor& brightTextColor() const;
+    const QColor& regularTextColor() const;
+    const QColor& colorPickerBorder() const;
+    const QColor& closeButtonColor() const;
+    int horizontalMargin() const;
+    int verticalMargin() const;
+    int borderWidth() const;
+    int filterHeight() const;
 
 private:
     Style(QObject* parent = nullptr);
@@ -35,6 +48,7 @@ private:
     const QColor m_brightTextColor{Qt::white};
     const QColor m_regularTextColor{Qt::black};
     const QColor m_colorPickerBorder{Qt::black};
+    const QColor m_closeButtonColor{Qt::red};
     const int m_horizontalMargin = 8;
     const int m_verticalMargin = 4;
     const int m_borderWidth = 2;

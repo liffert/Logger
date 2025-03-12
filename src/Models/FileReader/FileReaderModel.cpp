@@ -4,7 +4,6 @@
 #include <QClipboard>
 #include <chrono>
 
-
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
     m_fileWatcher(Utility::FileSystemWatcher::instance())
@@ -335,7 +334,7 @@ QColor Models::FileReader::FileReaderModel::getColor(const QString& text, const 
             return pattern.color;
         }
     }
-    return {Qt::black};
+    return Utility::Style::instance().regularTextColor();
 }
 
 void Models::FileReader::FileReaderModel::releaseCurrentFile()

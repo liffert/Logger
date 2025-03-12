@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import QtCore
 import Models
-
+import Utility
 
 Item {
     id: root
@@ -23,9 +23,8 @@ Item {
     TabBar {
         id: tabBar
         anchors.left: root.left
+        anchors.right: root.right
         anchors.top: root.top
-        width: Math.min(tabBar.contentWidth, root.width - openFile.width)
-
         Repeater {
             id: openedFilesRepeater
             model: root.openedFilesModel.model
@@ -36,18 +35,43 @@ Item {
                 required property string name
                 required property int index
 
-                width: openedFilesTabDelegate.implicitWidth + closeButton.width + 20
+                width: implicitContentWidth
+                height: implicitContentHeight
+                //rightPadding: closeButton.width + (Style.horizontalMargin * 2)
                 text: "%1: %2".arg(openedFilesTabDelegate.index + 1).arg(openedFilesTabDelegate.name)
 
-                Button {
-                    id: closeButton
-                    text: "x"
-                    anchors.right: openedFilesTabDelegate.right
-                    anchors.top: openedFilesTabDelegate.top
-                    anchors.bottom: openedFilesTabDelegate.bottom
-                    width: 20
-                    onClicked: root.openedFilesModel.stopWatchingFile(openedFilesTabDelegate.index)
+                contentItem: Item {
+                    id: openedFilesTabDelegateContentItem
+                    implicitWidth: textItem.width + closeButton.width + (Style.horizontalMargin * 3)
+                    implicitHeight: textItem.height + (Style.verticalMargin * 2)
+
+                    Text {
+                        id: textItem
+                        anchors.left: openedFilesTabDelegateContentItem.left
+                        anchors.leftMargin: Style.horizontalMargin
+                        anchors.verticalCenter: openedFilesTabDelegateContentItem.verticalCenter
+                        text: openedFilesTabDelegate.text
+                    }
+
+                    MouseArea {
+                        id: closeButton
+                        anchors.left: textItem.right
+                        anchors.top: openedFilesTabDelegateContentItem.top
+                        anchors.bottom: openedFilesTabDelegateContentItem.bottom
+                        anchors.leftMargin: Style.horizontalMargin
+                        width: 30
+                        onClicked: root.openedFilesModel.stopWatchingFile(openedFilesTabDelegate.index)
+
+                        Text {
+                            anchors.centerIn: closeButton
+                            text: "x"
+                            color: Style.closeButtonColor
+                        }
+                    }
                 }
+
+
+
             }
 
             onItemAdded: function(index, item) {
@@ -56,16 +80,6 @@ Item {
                 }
             }
         }
-    }
-
-    Button {
-        id: openFile
-        anchors.top: tabBar.top
-        anchors.left: tabBar.right
-        anchors.bottom: tabBar.bottom
-        text: "open file"
-
-        onClicked: root.openNewFile();
     }
 
     FileDialog  {
