@@ -3,6 +3,7 @@
 #include <QGuiApplication>
 #include <QClipboard>
 #include <chrono>
+#include <QFontMetrics>
 
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
@@ -19,6 +20,9 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     });
 
     connect(&Settings::SettingsModel::instance(), &Settings::SettingsModel::coloringPatternsChanged, this, &FileReaderModel::triggerRecoloring);
+    connect(&Utility::Style::instance(), &Utility::Style::logLineFontChanged, this, [this]() {
+        updateIndexLineWidth(true);
+    });
     connect(this, &FileReaderModel::filterChanged, this, &FileReaderModel::triggerRefiltering);
     connect(this, &FileReaderModel::filePathChanged, this, &FileReaderModel::openFile);
 }
@@ -192,6 +196,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 QMetaObject::invokeMethod(this, [this, items, filteredItems]() {
                     m_model.pushBack(items);
                     m_filteredModel.pushBack(filteredItems);
+                    updateIndexLineWidth(false);
                     emit itemsAdded();
                 }, Qt::QueuedConnection);
                 items.clear();
@@ -325,6 +330,29 @@ void Models::FileReader::FileReaderModel::triggerRecoloring()
         m_recolor = true;
         m_allowReading.notify_one();
     }
+}
+
+void Models::FileReader::FileReaderModel::updateIndexLineWidth(bool force)
+{
+    const auto lastIndex = m_model.rowCount();
+    const auto diff = digitsInNumber(lastIndex) - digitsInNumber(m_processedLineIndex);
+    if (m_processedLineIndex != lastIndex) {
+        m_processedLineIndex = lastIndex;
+    }
+
+    if (force || diff != 0) {
+        QFontMetrics metrics(Utility::Style::instance().logLineFont());
+        m_indexLineWidth = std::max(Utility::Style::instance().indexLineWidth(), metrics.horizontalAdvance(QString::number(lastIndex)));
+        emit indexLineWidthChanged();
+    }
+}
+
+int Models::FileReader::FileReaderModel::digitsInNumber(int value) const
+{
+    if (value == 0) {
+        return 1;
+    }
+    return static_cast<int>(std::log10(std::abs(value))) + 1;
 }
 
 QColor Models::FileReader::FileReaderModel::getColor(const QString& text, const QList<Settings::ColoringPattern>& patterns) const

@@ -61,7 +61,7 @@ Rectangle {
                     anchors.bottomMargin: Style.verticalMargin
                     width: 50
                     color: delegate.modelData.color
-                    border.width: 2
+                    border.width: Style.borderWidth
                     border.color: Style.colorPickerBorder
                 }
 
@@ -92,7 +92,6 @@ Rectangle {
 
             DropArea {
                 anchors.fill: delegate
-                anchors.margins: 5
                 onEntered: function(drag) {
                     SettingsModel.moveColoringPattern(drag.source.index, delegate.index)
                 }

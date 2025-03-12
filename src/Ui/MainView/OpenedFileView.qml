@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import Models
+import Utility
 
 import Ui.Components
 
@@ -78,7 +79,8 @@ SplitView {
             text: fullFileViewDelegate.modelData.text
             isSelected: fullFileViewDelegate.modelData.selected
             textColor: fullFileViewDelegate.modelData.color
-            textFont: SettingsModel.logLinesFont
+            textFont: Style.logLineFont
+            indexLineWidth: fileReaderModel.indexLineWidth
         }
 
         onUpdateItemsSelection: function(startIndex, endIndex, value) {
@@ -121,7 +123,8 @@ SplitView {
             isSelected: filteredFileViewDelegate.modelData.selected
             lineIndex: filteredFileViewDelegate.modelData.originalIndex
             textColor: filteredFileViewDelegate.modelData.color
-            textFont: SettingsModel.logLinesFont
+            textFont: Style.logLineFont
+            indexLineWidth: fileReaderModel.indexLineWidth
         }
 
         onUpdateItemsSelection: function(startIndex, endIndex, value) {

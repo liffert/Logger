@@ -16,9 +16,10 @@ Item {
     property bool isSelected: false
     property color textColor: Style.regularTextColor
     property font textFont: font
+    property int indexLineWidth: Style.indexLineWidth
 
     width: ListView.view.contentWidth
-    height: Math.max(textItem.height, 20)
+    height: Style.logLineHeight
 
     onContentPrefferedWidthChanged: {
         if (ListView.view.contentWidth < root.contentPrefferedWidth) {
@@ -31,7 +32,7 @@ Item {
         anchors.left: root.left
         anchors.top: root.top
         anchors.bottom: root.bottom
-        width: 100//TODO: update once when adding new item with latest index from CPP using QTextMetrics
+        width: root.indexLineWidth + (Style.horizontalMargin * 2)
         color: Style.backgroundColor
     }
 

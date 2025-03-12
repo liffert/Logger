@@ -44,6 +44,7 @@ class FileReaderModel : public QObject {
     Q_PROPERTY(Utility::Models::SelectionListModel<FilteredLogLine> *filteredModel READ filteredModel() CONSTANT)
     Q_PROPERTY(QString filter READ filter WRITE setFilter NOTIFY filterChanged)
     Q_PROPERTY(QString filePath MEMBER m_filePath NOTIFY filePathChanged)
+    Q_PROPERTY(int indexLineWidth MEMBER m_indexLineWidth NOTIFY indexLineWidthChanged)
 
 public:
     FileReaderModel(QObject* parent = nullptr);
@@ -75,6 +76,7 @@ signals:
     void itemsAdded();
     void modelReset();
     void filteredModelReset();
+    void indexLineWidthChanged();
 
 private:
     void openFile();
@@ -86,6 +88,8 @@ private:
     bool startFromTheBeginningIfNeeded(bool force, QTextStream& stream, const QFile& file);
     void triggerRefiltering();
     void triggerRecoloring();
+    void updateIndexLineWidth(bool force);
+    int digitsInNumber(int value) const;
     QColor getColor(const QString& text, const QList<Settings::ColoringPattern>& patterns) const;
 
     template<typename DataType>
@@ -115,6 +119,8 @@ private:
 
     int m_fileSize = 0;
     int m_currentModelSize = 0;
+    int m_indexLineWidth = Utility::Style::instance().indexLineWidth();
+    int m_processedLineIndex = 0;
 };
 
 }

@@ -4,7 +4,7 @@
 #include "Formatter.h"
 
 const QString Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY = QStringLiteral("ColoringPatterns");
-const QString Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY = QStringLiteral("LogLinesFont");
+const QString Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY = QStringLiteral("LogLineFont");
 
 Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
     QObject(parent),
@@ -13,14 +13,14 @@ Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
     //Register for properly working QSettings serialization
     qRegisterMetaType<QList<ColoringPattern>>();
 
-    updateLogLinesFont(m_persistentStorage.value(Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY, QGuiApplication::font()).value<QFont>());
+    updateLogLineFont(m_persistentStorage.value(Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY, QGuiApplication::font()).value<QFont>());
     m_coloringPatternsModel.pushBack(m_persistentStorage.value(Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY).value<QList<ColoringPattern>>());
 }
 
 Models::Settings::SettingsModel::~SettingsModel()
 {
     m_persistentStorage.setValue(Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY, QVariant::fromValue(m_coloringPatternsModel.getRawData()));
-    m_persistentStorage.setValue(Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY, m_logLinesFont);
+    m_persistentStorage.setValue(Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY, Utility::Style::instance().logLineFont());
 }
 
 Models::Settings::SettingsModel* Models::Settings::SettingsModel::create(QQmlEngine* qmlEngine, QJSEngine* jsEngine)
@@ -33,28 +33,20 @@ Models::Settings::SettingsModel* Models::Settings::SettingsModel::create(QQmlEng
     return &instance();
 }
 
-QFont Models::Settings::SettingsModel::logLinesFont() const
-{
-    return m_logLinesFont;
-}
-
 Models::Settings::SettingsModel &Models::Settings::SettingsModel::instance()
 {
     static SettingsModel instance;
     return instance;
 }
 
-void Models::Settings::SettingsModel::updateLogLinesFont(const QFont& value)
+void Models::Settings::SettingsModel::updateLogLineFont(const QFont& value)
 {
-    if (m_logLinesFont != value) {
-        m_logLinesFont = value;
-        emit logLinesFontChanged();
-    }
+    Utility::Style::instance().setLogLineFont(value);
 }
 
-void Models::Settings::SettingsModel::resetLogLinesFont()
+void Models::Settings::SettingsModel::resetLogLineFont()
 {
-    updateLogLinesFont(QGuiApplication::font());
+    updateLogLineFont(QGuiApplication::font());
 }
 
 QString Models::Settings::SettingsModel::formatFont(const QFont& font)

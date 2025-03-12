@@ -34,17 +34,15 @@ class SettingsModel : public QObject {
     QML_ELEMENT
     QML_SINGLETON
 
-    Q_PROPERTY(QFont logLinesFont READ logLinesFont NOTIFY logLinesFontChanged)
     Q_PROPERTY(Utility::Models::ListModel<ColoringPattern> *coloringPatternsModel READ coloringPatternsModel CONSTANT)
 
 public:
     Q_DISABLE_COPY_MOVE(SettingsModel)
     static SettingsModel& instance();
     static SettingsModel* create(QQmlEngine* qmlEngine, QJSEngine* jsEngine);
-    QFont logLinesFont() const;
 
-    Q_INVOKABLE void updateLogLinesFont(const QFont& value);
-    Q_INVOKABLE void resetLogLinesFont();
+    Q_INVOKABLE void updateLogLineFont(const QFont& value);
+    Q_INVOKABLE void resetLogLineFont();
     //TODO_LOW: maybe make formatter class as singleton and use directly from qml
     Q_INVOKABLE QString formatFont(const QFont& font);
     Q_INVOKABLE void addPattern(const QString& filter, const QColor& color, bool caseSensitive);
@@ -58,7 +56,6 @@ public:
     Utility::Models::ListModel<ColoringPattern>* coloringPatternsModel();
 
 signals:
-    void logLinesFontChanged();
     void coloringPatternsChanged();
 
 private:
@@ -71,7 +68,6 @@ private:
     ~SettingsModel();
 
     QSettings m_persistentStorage;
-    QFont m_logLinesFont;
     Utility::Models::ListModel<ColoringPattern> m_coloringPatternsModel;
     QList<ColoringPattern> m_lastColoringPatterns;
 };

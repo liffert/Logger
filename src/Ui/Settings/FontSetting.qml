@@ -30,21 +30,21 @@ Rectangle {
 
         Button {
             id: selectFontButton
-            text: SettingsModel.formatFont(SettingsModel.logLinesFont)
+            text: SettingsModel.formatFont(Style.logLineFont)
             onClicked: fontDialog.open()
         }
 
         Button {
             id: resetToDefault
             text: "Reset to default"
-            onClicked: SettingsModel.resetLogLinesFont()
+            onClicked: SettingsModel.resetLogLineFont()
         }
     }
 
     FontDialog {
         id: fontDialog
 
-        selectedFont: SettingsModel.logLinesFont
-        onAccepted: SettingsModel.updateLogLinesFont(fontDialog.selectedFont)
+        selectedFont: Style.logLineFont
+        onAccepted: SettingsModel.updateLogLineFont(fontDialog.selectedFont)
     }
 }
