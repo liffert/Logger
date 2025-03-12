@@ -1,17 +1,18 @@
 set(UTILITY_HEADERS
     FileSystemWatcher.h
     Formatter.h
+    Style.h
 )
 
 set(UTILITY_SOURCES
     FileSystemWatcher.cpp
     Formatter.cpp
+    Style.cpp
 )
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui)
 add_subdirectory(Models/)
 
-#TODO_LOW: design singleton will be here, so leave as QML library
 qt_add_library(Utility STATIC)
 qt_add_qml_module(Utility
     URI Utility

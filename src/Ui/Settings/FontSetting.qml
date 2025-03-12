@@ -5,14 +5,23 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import Ui.Components
 import Models
+import Utility
 
-Item {
+Rectangle {
     id: root
-    height: contnetRow.height
+    height: contnetRow.height + (Style.verticalMargin * 2)
+    border.width: Style.borderWidth
+    border.color: Style.backgroundColor
 
     Row {
         id: contnetRow
-        spacing: 5
+        spacing: Style.horizontalMargin
+        anchors.verticalCenter: root.verticalCenter
+        anchors.left: root.left
+        anchors.right: root.right
+        anchors.leftMargin: Style.horizontalMargin
+        anchors.rightMargin: Style.horizontalMargin
+
         Text {
             id: currentFont
             text: "Current font: "

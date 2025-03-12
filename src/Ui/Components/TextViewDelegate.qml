@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import Utility
 
 Item {
     id: root
@@ -13,7 +14,7 @@ Item {
     property int lineIndex: root.index
     property string text: ""
     property bool isSelected: false
-    property color textColor: Qt.color("black")
+    property color textColor: Style.regularTextColor
     property font textFont: font
 
     width: ListView.view.contentWidth
@@ -25,20 +26,13 @@ Item {
         }
     }
 
-    //TODO: Design check
-    Rectangle {
-        id: background
-        anchors.fill: root
-        color: "white"
-    }
-
     Rectangle {
         id: lineIndexItemBackground
         anchors.left: root.left
         anchors.top: root.top
         anchors.bottom: root.bottom
         width: 100//TODO: update once when adding new item with latest index from CPP using QTextMetrics
-        color: "grey"
+        color: Style.backgroundColor
     }
 
     Rectangle {
@@ -47,7 +41,7 @@ Item {
         anchors.bottom: root.bottom
         anchors.left: root.left
         anchors.right: root.right
-        color: "blue"
+        color: Style.highlightColor
         visible: false
         opacity: 0.5
     }
@@ -58,10 +52,10 @@ Item {
         textFormat: Text.PlainText
         anchors.right: lineIndexItemBackground.right
         anchors.left: lineIndexItemBackground.left
-        anchors.rightMargin: 10
+        anchors.rightMargin: Style.horizontalMargin
         anchors.verticalCenter: root.verticalCenter
         horizontalAlignment: Text.AlignRight
-        color: "white"
+        color: Style.brightTextColor
         font: root.textFont
     }
 
@@ -70,7 +64,7 @@ Item {
         id: textItem
         anchors.verticalCenter: root.verticalCenter
         anchors.left: lineIndexItemBackground.right
-        anchors.leftMargin: 10
+        anchors.leftMargin: Style.horizontalMargin
         text: root.text
         readOnly: true
         color: root.textColor
@@ -83,7 +77,7 @@ Item {
             when: root.isSelected
             PropertyChanges {
                 hightlight.visible: true
-                textItem.color: "white"
+                textItem.color: Style.brightTextColor
             }
         }
     ]

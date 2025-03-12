@@ -5,11 +5,14 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import Ui.Components
 import Models
+import Utility
 
 
 Rectangle {
     id: root
-    border.width: 2
+    border.width: Style.borderWidth
+    border.color: Style.backgroundColor
+    color: Style.textBackgroundColor
 
     //TODO: design check
     //TODO: scrollbars check
@@ -19,8 +22,8 @@ Rectangle {
         anchors.right: root.right
         anchors.top: root.top
         anchors.bottom: addEditItem.top
-        anchors.topMargin: 5
-        anchors.leftMargin: 5
+        anchors.topMargin: Style.verticalMargin
+        anchors.leftMargin: Style.verticalMargin
 
         model: SettingsModel.coloringPatternsModel
         delegate: Item {
@@ -38,7 +41,7 @@ Rectangle {
             Row {
                 id: contentLayout
                 height: Math.max(40, patternText.height + 10)
-                spacing: 10
+                spacing: Style.horizontalMargin
 
                 Drag.active: delegate.isHeld
                 Drag.source: delegate
@@ -52,13 +55,14 @@ Rectangle {
                 }
 
                 Rectangle {
-                    border.width: 2
                     anchors.top: contentLayout.top
                     anchors.bottom: contentLayout.bottom
-                    anchors.topMargin: 5
-                    anchors.bottomMargin: 5
+                    anchors.topMargin: Style.verticalMargin
+                    anchors.bottomMargin: Style.verticalMargin
                     width: 50
                     color: delegate.modelData.color
+                    border.width: 2
+                    border.color: Style.colorPickerBorder
                 }
 
                 CheckBox {
@@ -106,7 +110,7 @@ Rectangle {
 
                 onPressed: {
                     if (!Boolean(addEditItem.editedDelegate)) {
-                        delegate.isHeld = true
+                        delegate.isHeld = true;
                     }
                 }
                 onReleased: delegate.isHeld = false
@@ -127,23 +131,38 @@ Rectangle {
         anchors.bottom: root.bottom
         anchors.left: root.left
         anchors.right: root.right
-        height: addEditItemText.height + 20
-        border.width: 2
+        height: Math.max(addEditItemText.height, Style.filterHeight) + (Style.verticalMargin * 2)
+        color: Style.backgroundColor
 
         Text {
             id: addEditItemText
             anchors.verticalCenter: addEditItem.verticalCenter
             anchors.left: addEditItem.left
-            anchors.leftMargin: 5
+            anchors.leftMargin: Style.horizontalMargin
             text: "Input new color pattern:"
+            color: Style.textBackgroundColor
+        }
+
+        Rectangle {
+            id: colorPatternInputBackground
+            anchors.left: addEditItemText.right
+            anchors.right: addEditItemOptionsRow.left
+            anchors.top: addEditItem.top
+            anchors.bottom: addEditItem.bottom
+            anchors.leftMargin: Style.horizontalMargin
+            anchors.rightMargin: Style.horizontalMargin
+            border.width: Style.borderWidth
+            border.color: Style.backgroundColor
+            color: Style.textBackgroundColor
         }
 
         TextInput {
             id: colorPatternInput
             clip: true
-            anchors.left: addEditItemText.right
-            anchors.right: addEditItemOptionsRow.left
-            anchors.leftMargin: 5
+            anchors.left: colorPatternInputBackground.left
+            anchors.right: colorPatternInputBackground.right
+            anchors.leftMargin: Style.horizontalMargin
+            anchors.rightMargin: Style.horizontalMargin
             anchors.verticalCenter: addEditItem.verticalCenter
         }
 
@@ -152,30 +171,33 @@ Rectangle {
             anchors.right: addEditItem.right
             anchors.top: addEditItem.top
             anchors.bottom: addEditItem.bottom
-            anchors.rightMargin: 5
-            anchors.topMargin: 5
-            anchors.bottomMargin: 5
+            anchors.rightMargin: Style.horizontalMargin
+            anchors.topMargin: Style.verticalMargin
+            anchors.bottomMargin: Style.verticalMargin
 
-            Button {
+            Rectangle {
                 id: colorPicker
                 anchors.top: addEditItemOptionsRow.top
                 anchors.bottom: addEditItemOptionsRow.bottom
 
-                property color patternColor: "black"
+                property color patternColor: Style.regularTextColor
+
+                border.width: Style.borderWidth
+                border.color: Style.colorPickerBorder
+                color: colorPicker.patternColor
 
                 width: 50
-                background: Rectangle {
-                    border.width: 2
-                    color: colorPicker.patternColor
-                }
 
-                onClicked: {
-                    colorDialog.selectedColor = colorPicker.patternColor;
-                    colorDialog.open();
+                MouseArea {
+                    anchors.fill: colorPicker
+                    onClicked: {
+                        colorDialog.selectedColor = colorPicker.patternColor;
+                        colorDialog.open();
+                    }
                 }
             }
 
-            CheckBox {
+            Checkbox {
                 id: caseSensitiveOption
                 anchors.verticalCenter: addEditItemOptionsRow.verticalCenter
 
@@ -195,7 +217,7 @@ Rectangle {
                     } else {
                         SettingsModel.addPattern(colorPatternInput.displayText, colorPicker.patternColor, caseSensitiveOption.checked);
                         colorPatternInput.clear();
-                        colorPicker.patternColor = "black";
+                        colorPicker.patternColor = Style.regularTextColor;
                         caseSensitiveOption.checked = false;
                     }
                 }

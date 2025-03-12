@@ -2,10 +2,10 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import Utility
 
-Rectangle {
+Item {
     id: root
-    color: "white"
 
     property alias autoScrollEnabled: autoScrollOption.checked
     property bool showFilter: false
@@ -16,7 +16,7 @@ Rectangle {
 
     signal processFilter(var filterText)
 
-    height: filterText.implicitHeight + 10
+    height: Math.max(filterText.implicitHeight, Style.filterHeight) + (Style.verticalMargin * 2)
 
     //TODO_LOW: activity indicator
     Item {
@@ -25,33 +25,47 @@ Rectangle {
         anchors.bottom: root.bottom
         anchors.left: root.left
         anchors.right: autoScrollOption.left
-        anchors.rightMargin: 10
+        anchors.rightMargin: Style.horizontalMargin
+        anchors.leftMargin: Style.horizontalMargin
         visible: root.showFilter
 
         Text {
             id: filterText
-            text: "CurrentFilter: "
+            text: "CurrentFilter:"
             anchors.left: filterItem.left
+            anchors.verticalCenter: filterItem.verticalCenter
+            color: Style.brightTextColor
+        }
+
+        Rectangle {
+            id: filterBackground
             anchors.top: filterItem.top
             anchors.bottom: filterItem.bottom
+            anchors.left: filterText.right
+            anchors.right: filterItem.right
+            anchors.leftMargin: Style.horizontalMargin
+            color: Style.textBackgroundColor
+            border.width: Style.borderWidth
+            border.color: Style.backgroundColor
         }
 
         //TODO_LOW: Make history of previous searches
         TextInput {
             id: filter
-            anchors.left: filterText.right
-            anchors.right: filterItem.right
-            anchors.top: filterItem.top
-            anchors.bottom: filterItem.bottom
+            anchors.left: filterBackground.left
+            anchors.right: filterBackground.right
+            anchors.leftMargin: Style.horizontalMargin
+            anchors.rightMargin: Style.horizontalMargin
+            anchors.verticalCenter: filterItem.verticalCenter
             clip: true
-
             onAccepted: root.processFilter(filter.displayText)
         }
     }
 
-    CheckBox {
+    Checkbox {
         id: autoScrollOption
         anchors.right: root.right
+        anchors.verticalCenter: root.verticalCenter
         text: "Auto Scroll"
         checked: true
     }

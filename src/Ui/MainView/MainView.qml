@@ -6,6 +6,7 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtCore
 import Models
+import Utility
 import Ui.Components
 
 Item {
@@ -15,12 +16,17 @@ Item {
         tabBar.openNewFile();
     }
 
+    Rectangle {
+        id: background
+        anchors.fill: root
+        color: Style.backgroundColor
+    }
+
     OpenedFilesTabBar {
         id: tabBar
         anchors.left: root.left
         anchors.right: root.right
         anchors.top: root.top
-
         openedFilesModel: openedFilesModel
     }
 
@@ -31,7 +37,7 @@ Item {
         anchors.right: root.right
         anchors.top: tabBar.bottom
         anchors.bottom: root.bottom
-        anchors.topMargin: 20
+        anchors.topMargin: Style.verticalMargin
 
         currentIndex: tabBar.currentIndex
 

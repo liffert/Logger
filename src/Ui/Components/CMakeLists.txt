@@ -7,4 +7,5 @@ qt_add_qml_module(Ui_Components
         TextViewDelegate.qml
         TextViewToolbar.qml
         ListViewEnhanced.qml
+        Checkbox.qml
 )

@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import Qt.labs.animation
+import Utility
 
 Item {
     id: root
@@ -19,12 +20,6 @@ Item {
     signal itemSelected(var item, var exclusive)
     signal itemDoubleClicked(var item, var exclusive)
 
-    //TODO: design check
-    Rectangle {
-        anchors.fill: root
-        color: "grey"
-    }
-
     TextViewToolbar {
         id: toolbar
         anchors.left: root.left
@@ -36,6 +31,12 @@ Item {
                 listView.positionViewAtEnd();
             }
         }
+    }
+
+    Rectangle {
+        id: background
+        anchors.fill: listView
+        color: Style.textBackgroundColor
     }
 
     ListViewEnhanced {
