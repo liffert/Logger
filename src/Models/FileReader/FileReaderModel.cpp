@@ -64,13 +64,12 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
         return Settings::SettingsModel::instance().coloringPatterns();
     }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(coloringPatterns), coloringPatterns));
 
-
     QFile file;
     file.setFileName(filePath);
     file.open(QIODevice::ReadOnly);
     QTextStream stream(&file);
 
-    QString currentFilter = filter();
+    auto currentFilter = createRegExp(filter());
 
     startFromTheBeginningIfNeeded(true, stream, file);
 
@@ -117,10 +116,10 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
                 m_refilter.store(false, std::memory_order::relaxed);
                 filteredItems.clear();
-                currentFilter = filter();
+                currentFilter = createRegExp(filter());
                 QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
 
-                if (currentFilter.isEmpty()) {
+                if (currentFilter.pattern().isEmpty()) {
                     break;
                 }
 
@@ -301,6 +300,7 @@ Utility::Models::SelectionListModel<Models::FileReader::FilteredLogLine>* Models
     return &m_filteredModel;
 }
 
+//TODO check performance impact
 bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force, QTextStream& stream, const QFile& file)
 {
     const auto currentSize = file.size();
@@ -358,11 +358,16 @@ int Models::FileReader::FileReaderModel::digitsInNumber(int value) const
 QColor Models::FileReader::FileReaderModel::getColor(const QString& text, const QList<Settings::ColoringPattern>& patterns) const
 {
     for (const auto& pattern : patterns) {
-        if (text.contains(QRegularExpression(pattern.pattern, pattern.caseSensitive ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption))) {
+        if (pattern.regexp.match(text).hasMatch()) {
             return pattern.color;
         }
     }
     return Utility::Style::instance().regularTextColor();
+}
+
+QRegularExpression Models::FileReader::FileReaderModel::createRegExp(const QString& filter) const
+{
+    return QRegularExpression(filter, QRegularExpression::CaseInsensitiveOption);
 }
 
 void Models::FileReader::FileReaderModel::releaseCurrentFile()
@@ -388,9 +393,9 @@ void Models::FileReader::FileReaderModel::resetFilteredModel()
     emit filteredModelReset();
 }
 
-bool Models::FileReader::FileReaderModel::isTextContainsFilter(const QString &text, const QString& filter)
+bool Models::FileReader::FileReaderModel::isTextContainsFilter(const QString& text, const QRegularExpression& filter)
 {
-    return !filter.isEmpty() && text.contains(QRegularExpression(m_filter, QRegularExpression::CaseInsensitiveOption));
+    return !filter.pattern().isEmpty() && filter.match(text).hasMatch();
 }
 
 template<typename DataType>

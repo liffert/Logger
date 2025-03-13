@@ -84,13 +84,14 @@ private:
     void releaseCurrentFile();
     void resetModel();
     void resetFilteredModel();
-    bool isTextContainsFilter(const QString& text, const QString& filter);
+    bool isTextContainsFilter(const QString& text, const QRegularExpression& filter);
     bool startFromTheBeginningIfNeeded(bool force, QTextStream& stream, const QFile& file);
     void triggerRefiltering();
     void triggerRecoloring();
     void updateIndexLineWidth(bool force);
     int digitsInNumber(int value) const;
     QColor getColor(const QString& text, const QList<Settings::ColoringPattern>& patterns) const;
+    QRegularExpression createRegExp(const QString& filter) const;
 
     template<typename DataType>
     void copyToClipBoard(const Utility::Models::SelectionListModel<DataType>& model) const;

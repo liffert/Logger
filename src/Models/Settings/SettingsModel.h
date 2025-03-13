@@ -8,6 +8,7 @@
 #include <QFont>
 #include "Models/ListModel.h"
 #include "Style.h"
+#include <QRegularExpression>
 
 namespace Models::Settings {
 
@@ -21,6 +22,7 @@ public:
     QString pattern;
     QColor color = Utility::Style::instance().regularTextColor();
     bool caseSensitive = false;
+    QRegularExpression regexp;
 
     bool operator==(const ColoringPattern&) const = default;
 
@@ -85,6 +87,11 @@ inline QDataStream& operator>>(QDataStream& stream, ColoringPattern& object)
     stream >> object.pattern;
     stream >> object.color;
     stream >> object.caseSensitive;
+
+    //TODO: Global create regexp function
+    QRegularExpression regexp(object.pattern, object.caseSensitive ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
+    object.regexp = regexp;
+
     return stream;
 }
 

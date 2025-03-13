@@ -56,7 +56,8 @@ QString Models::Settings::SettingsModel::formatFont(const QFont& font)
 
 void Models::Settings::SettingsModel::addPattern(const QString& filter, const QColor& color, bool caseSensitive)
 {
-    m_coloringPatternsModel.pushBack({filter, color, caseSensitive});
+    QRegularExpression regexp(filter, caseSensitive ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
+    m_coloringPatternsModel.pushBack({filter, color, caseSensitive, regexp});
 }
 
 void Models::Settings::SettingsModel::deletePattern(int index)
@@ -66,7 +67,8 @@ void Models::Settings::SettingsModel::deletePattern(int index)
 
 void Models::Settings::SettingsModel::updatePattern(const QString& filter, const QColor& color, bool caseSensitive, int index)
 {
-    m_coloringPatternsModel.update(index, {filter, color, caseSensitive});
+    QRegularExpression regexp(filter, caseSensitive ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
+    m_coloringPatternsModel.update(index, {filter, color, caseSensitive, regexp});
 }
 
 void Models::Settings::SettingsModel::openSettings()
