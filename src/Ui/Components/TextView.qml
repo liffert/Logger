@@ -37,7 +37,6 @@ Item {
     Rectangle {
         id: background
         anchors.fill: listView
-        anchors.leftMargin: root.indexLineWidth
         color: Style.textBackgroundColor
     }
 

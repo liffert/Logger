@@ -27,6 +27,16 @@ Item {
         }
     }
 
+
+    Rectangle {
+        id: lineIndexItemBackground
+        anchors.left: root.left
+        anchors.top: root.top
+        anchors.bottom: root.bottom
+        width: root.indexLineWidth
+        color: Style.backgroundColor
+    }
+
     Rectangle {
         id: hightlight
         anchors.top: root.top
@@ -38,33 +48,25 @@ Item {
         opacity: 0.5
     }
 
-    Item {
-        id: lineIndexItem
-        anchors.left: root.left
-        anchors.top: root.top
-        anchors.bottom: root.bottom
-        width: root.indexLineWidth
-
-        Text {
-            id: lineIndexItemText
-            anchors.left: lineIndexItem.left
-            anchors.right: lineIndexItem.right
-            anchors.leftMargin: Style.horizontalMargin
-            anchors.rightMargin: Style.horizontalMargin
-            anchors.verticalCenter: lineIndexItem.verticalCenter
-            text: root.lineIndex
-            textFormat: Text.PlainText
-            horizontalAlignment: Text.AlignRight
-            color: Style.brightTextColor
-            font: root.textFont
-        }
+    Text {
+        id: lineIndexItemText
+        anchors.left: lineIndexItemBackground.left
+        anchors.right: lineIndexItemBackground.right
+        anchors.leftMargin: Style.horizontalMargin
+        anchors.rightMargin: Style.horizontalMargin
+        anchors.verticalCenter: lineIndexItemBackground.verticalCenter
+        text: root.lineIndex
+        textFormat: Text.PlainText
+        horizontalAlignment: Text.AlignRight
+        color: Style.brightTextColor
+        font: root.textFont
     }
 
     //TextInput can render instantly text which regular Text item renders within 800ms+
     TextInput {
         id: textItem
         anchors.verticalCenter: root.verticalCenter
-        anchors.left: lineIndexItem.right
+        anchors.left: lineIndexItemBackground.right
         anchors.leftMargin: Style.horizontalMargin
         text: root.text
         readOnly: true
