@@ -1,3 +1,9 @@
+## License
+Logger is licensed under the [GNU General Public License v3.0](LICENSE).  
+You are free to use, modify, and distribute it under the terms of the GPLv3.  
+
+See [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html) for details.
+
 # Logger
 
 Log viewer application
