@@ -56,8 +56,8 @@ template <Selectable DataType>
 inline void SelectionListModel<DataType>::reset()
 {
     this->beginResetModel();
-    this->m_data.clear();
-    m_selectionHelper.clear();
+    this->m_data = {};
+    m_selectionHelper = {};
     this->endResetModel();
 }
 
@@ -134,7 +134,7 @@ inline void SelectionListModel<DataType>::resetSelection()
             }
         }
     }
-    m_selectionHelper.clear();
+    m_selectionHelper = {};
 }
 
 template <Selectable DataType>

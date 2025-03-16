@@ -194,7 +194,7 @@ template <typename DataType>
 inline void ListModel<DataType>::reset()
 {
     beginResetModel();
-    m_data.clear();
+    m_data = {};
     endResetModel();
 }
 
