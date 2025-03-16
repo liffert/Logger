@@ -61,6 +61,9 @@ Item {
                 model: ["On read", "On render"]
                 currentIndex: SettingsModel.coloringStrategy === Settings.ColoringStrategy.ON_RENDER ? 1 : 0
 
+                ToolTip.visible: coloringStrategySelector.hovered
+                ToolTip.text: "\"On read\": color assigned to each line during reading from the file. Gives smoother vertical scrolling experience than \"on render\" strategy due to \"color once\" approach outside of GUI thread. Change in coloring patterns lead to re\-reading while file.\n\n\"On render\": color assigned when line is being rendered. Supports change in coloring patterns without re-reading the file. Loads huge files much faster than \"on read\" appoach because coloring is skiped for not visible items in the view. Can lead to choppier vertical scrolling experience due to coloring on rendering.\n\nRecommended setting is \"On read\". Choose \"On render\" in case if speed of reading files is not satisfying or updating of coloring patterns without re-reading the whole file is a must, but be aware that using this strategy can affect UI smoothness."
+
                 onActivated: function(index) {
                     SettingsModel.coloringStrategy = index === 1 ? Settings.ColoringStrategy.ON_RENDER : Settings.ColoringStrategy.ON_READ;
                 }

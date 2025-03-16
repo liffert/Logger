@@ -20,6 +20,7 @@ Item {
         id: background
         anchors.fill: openedFiles
         color: Style.backgroundColor
+        visible: openedFiles.count > 0
     }
 
     OpenedFilesTabBar {
@@ -28,6 +29,7 @@ Item {
         anchors.right: root.right
         anchors.top: root.top
         openedFilesModel: openedFilesModel
+        visible: openedFiles.count > 0
     }
 
     StackLayout {
