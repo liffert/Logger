@@ -28,7 +28,6 @@ Item {
         Repeater {
             id: openedFilesRepeater
             model: root.openedFilesModel.model
-            //TODO: Rework this delegate
             delegate: TabButton {
                 id: openedFilesTabDelegate
 
@@ -37,7 +36,6 @@ Item {
 
                 width: implicitContentWidth
                 height: implicitContentHeight
-                //rightPadding: closeButton.width + (Style.horizontalMargin * 2)
                 text: "%1: %2".arg(openedFilesTabDelegate.index + 1).arg(openedFilesTabDelegate.name)
 
                 contentItem: Item {

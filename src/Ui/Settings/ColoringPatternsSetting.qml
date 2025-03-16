@@ -14,7 +14,6 @@ Rectangle {
     border.color: Style.backgroundColor
     color: Style.textBackgroundColor
 
-    //TODO: design check
     //TODO: scrollbars check
     ListViewEnhanced {
         id: listView
