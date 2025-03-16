@@ -70,6 +70,7 @@ SplitView {
         SplitView.minimumHeight: fullFileView.toolbar.height + 50
 
         model: fileReaderModel.model
+        indexLineWidth: fileReaderModel.indexLineWidth + (Style.horizontalMargin * 2)
 
         delegateComponent: TextViewDelegate {
             id: fullFileViewDelegate
@@ -80,7 +81,29 @@ SplitView {
             isSelected: fullFileViewDelegate.modelData.selected
             textColor: fullFileViewDelegate.modelData.color
             textFont: Style.logLineFont
-            indexLineWidth: fileReaderModel.indexLineWidth
+            indexLineWidth: fullFileView.indexLineWidth
+
+            Connections {
+                target: fileReaderModel
+                enabled: internal.onRenderStrategy
+                function onRecolorRenderedItems() {
+                    if (internal.onRenderStrategy) {
+                        fullFileViewDelegate.textColor = fileReaderModel.getColor(fullFileViewDelegate.text);
+                    }
+                }
+            }
+
+            StateGroup {
+                states: [
+                    State {
+                        when: internal.onRenderStrategy
+                        PropertyChanges {
+                            target: fullFileViewDelegate
+                            textColor: fileReaderModel.getColor(fullFileViewDelegate.text)
+                        }
+                    }
+                ]
+            }
         }
 
         onUpdateItemsSelection: function(startIndex, endIndex, value) {
@@ -112,6 +135,7 @@ SplitView {
         SplitView.minimumHeight: filteredFileView.toolbar.height + 200
 
         model: fileReaderModel.filteredModel
+        indexLineWidth: fileReaderModel.indexLineWidth + (Style.horizontalMargin * 2)
         toolbar.showFilter: true
 
         delegateComponent: TextViewDelegate {
@@ -124,7 +148,29 @@ SplitView {
             lineIndex: filteredFileViewDelegate.modelData.originalIndex
             textColor: filteredFileViewDelegate.modelData.color
             textFont: Style.logLineFont
-            indexLineWidth: fileReaderModel.indexLineWidth
+            indexLineWidth: filteredFileView.indexLineWidth
+
+            Connections {
+                target: fileReaderModel
+                enabled: internal.onRenderStrategy
+                function onRecolorRenderedItems() {
+                    if (internal.onRenderStrategy) {
+                        filteredFileViewDelegate.textColor = fileReaderModel.getColor(filteredFileViewDelegate.text);
+                    }
+                }
+            }
+
+            StateGroup {
+                states: [
+                    State {
+                        when: internal.onRenderStrategy
+                        PropertyChanges {
+                            target: filteredFileViewDelegate
+                            textColor: fileReaderModel.getColor(filteredFileViewDelegate.text)
+                        }
+                    }
+                ]
+            }
         }
 
         onUpdateItemsSelection: function(startIndex, endIndex, value) {
@@ -172,6 +218,7 @@ SplitView {
     QtObject {
         id: internal
         property var lastSelectedView: null
+        readonly property bool onRenderStrategy: SettingsModel.coloringStrategy === Settings.ColoringStrategy.ON_RENDER
     }
 
     Component.onCompleted: filteredFileView.toolbar.setInitialFilter(fileReaderModel.filter)

@@ -5,6 +5,7 @@
 
 const QString Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY = QStringLiteral("ColoringPatterns");
 const QString Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY = QStringLiteral("LogLineFont");
+const QString Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_STRATEGY_KEY = QStringLiteral("ColoringStrategy");
 
 Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
     QObject(parent),
@@ -12,8 +13,10 @@ Models::Settings::SettingsModel::SettingsModel(QObject *parent) :
 {
     //Register for properly working QSettings serialization
     qRegisterMetaType<QList<ColoringPattern>>();
+    qRegisterMetaType<ColoringStrategy>();
 
     updateLogLineFont(m_persistentStorage.value(Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY, QGuiApplication::font()).value<QFont>());
+    setColoringStrategy(m_persistentStorage.value(Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_STRATEGY_KEY, QVariant::fromValue(ColoringStrategy::ON_READ)).value<ColoringStrategy>());
     m_coloringPatternsModel.pushBack(m_persistentStorage.value(Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY).value<QList<ColoringPattern>>());
 }
 
@@ -21,6 +24,17 @@ Models::Settings::SettingsModel::~SettingsModel()
 {
     m_persistentStorage.setValue(Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_PATTERNS_KEY, QVariant::fromValue(m_coloringPatternsModel.getRawData()));
     m_persistentStorage.setValue(Models::Settings::SettingsModel::PersistentStorageKeys::LOG_LINES_FONT_KEY, Utility::Style::instance().logLineFont());
+    m_persistentStorage.setValue(Models::Settings::SettingsModel::PersistentStorageKeys::COLORING_STRATEGY_KEY, QVariant::fromValue(m_coloringStrategy));
+}
+
+void Models::Settings::SettingsModel::invokeColoringPatternsChanged(bool onClose)
+{
+    //TODO: recheck
+    const auto& currentColoringPatterns = m_coloringPatternsModel.getRawData();
+    if (m_coloringStrategy == ColoringStrategy::ON_RENDER || (onClose && m_lastColoringPatterns != currentColoringPatterns)) {
+        m_lastColoringPatterns = currentColoringPatterns;
+        emit coloringPatternsChanged();
+    }
 }
 
 Models::Settings::SettingsModel* Models::Settings::SettingsModel::create(QQmlEngine* qmlEngine, QJSEngine* jsEngine)
@@ -58,17 +72,20 @@ void Models::Settings::SettingsModel::addPattern(const QString& filter, const QC
 {
     QRegularExpression regexp(filter, caseSensitive ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
     m_coloringPatternsModel.pushBack({filter, color, caseSensitive, regexp});
+    invokeColoringPatternsChanged(false);
 }
 
 void Models::Settings::SettingsModel::deletePattern(int index)
 {
     m_coloringPatternsModel.remove(index);
+    invokeColoringPatternsChanged(false);
 }
 
 void Models::Settings::SettingsModel::updatePattern(const QString& filter, const QColor& color, bool caseSensitive, int index)
 {
     QRegularExpression regexp(filter, caseSensitive ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
     m_coloringPatternsModel.update(index, {filter, color, caseSensitive, regexp});
+    invokeColoringPatternsChanged(false);
 }
 
 void Models::Settings::SettingsModel::openSettings()
@@ -78,14 +95,26 @@ void Models::Settings::SettingsModel::openSettings()
 
 void Models::Settings::SettingsModel::closeSettings()
 {
-    if (m_lastColoringPatterns != m_coloringPatternsModel.getRawData()) {
-        emit coloringPatternsChanged();
-    }
+    invokeColoringPatternsChanged(true);
 }
 
 void Models::Settings::SettingsModel::moveColoringPattern(int from, int to)
 {
     m_coloringPatternsModel.move(from, to);
+    invokeColoringPatternsChanged(false);
+}
+
+Models::Settings::ColoringStrategy Models::Settings::SettingsModel::coloringStrategy() const
+{
+    return m_coloringStrategy;
+}
+
+void Models::Settings::SettingsModel::setColoringStrategy(ColoringStrategy value)
+{
+    if (m_coloringStrategy != value) {
+        m_coloringStrategy = value;
+        emit coloringStrategyChanged();
+    }
 }
 
 const QList<Models::Settings::ColoringPattern>& Models::Settings::SettingsModel::coloringPatterns()

@@ -15,6 +15,7 @@ Item {
     property alias autoScrollEnabled: toolbar.autoScrollEnabled
 
     property Component delegateComponent: null
+    property int indexLineWidth: Style.indexLineWidth
 
     signal updateItemsSelection(var startIndex, var endIndex, var value)
     signal itemSelected(var item, var exclusive)
@@ -36,6 +37,7 @@ Item {
     Rectangle {
         id: background
         anchors.fill: listView
+        anchors.leftMargin: root.indexLineWidth
         color: Style.textBackgroundColor
     }
 

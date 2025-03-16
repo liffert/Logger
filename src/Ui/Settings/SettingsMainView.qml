@@ -18,7 +18,7 @@ Item {
     }
 
     Rectangle {
-        id: colorPatternsText
+        id: colorPatternsHeader
         border.width: Style.borderWidth
         border.color: Style.backgroundColor
         anchors.top: fontSetting.bottom
@@ -29,12 +29,42 @@ Item {
 
         Text {
             id: colorPatternsTextItem
-            anchors.left: colorPatternsText.left
-            anchors.right: colorPatternsText.right
-            anchors.verticalCenter: colorPatternsText.verticalCenter
+            anchors.left: colorPatternsHeader.left
+            anchors.right: colorPatternsHeader.right
+            anchors.verticalCenter: colorPatternsHeader.verticalCenter
             anchors.leftMargin: Style.horizontalMargin
             anchors.topMargin: Style.horizontalMargin
             text: "Color patterns"
+        }
+
+        Item {
+            id: coloringStrategy
+            anchors.right: colorPatternsHeader.right
+            anchors.top: colorPatternsHeader.top
+            anchors.bottom: colorPatternsHeader.bottom
+
+            Text {
+                anchors.right: coloringStrategySelector.left
+                anchors.rightMargin: Style.horizontalMargin
+                anchors.verticalCenter: coloringStrategy.verticalCenter
+                text: "Coloring strategy:"
+            }
+
+            ComboBox {
+                id: coloringStrategySelector
+                anchors.top: coloringStrategy.top
+                anchors.bottom: coloringStrategy.bottom
+                anchors.right: coloringStrategy.right
+                anchors.rightMargin: Style.horizontalMargin
+                anchors.topMargin: Style.verticalMargin
+                anchors.bottomMargin: Style.verticalMargin
+                model: ["On read", "On render"]
+                currentIndex: SettingsModel.coloringStrategy === Settings.ColoringStrategy.ON_RENDER ? 1 : 0
+
+                onActivated: function(index) {
+                    SettingsModel.coloringStrategy = index === 1 ? Settings.ColoringStrategy.ON_RENDER : Settings.ColoringStrategy.ON_READ;
+                }
+            }
         }
     }
 
@@ -42,7 +72,7 @@ Item {
         id: coloringPatterns
         anchors.left: root.left
         anchors.right: root.right
-        anchors.top: colorPatternsText.bottom
+        anchors.top: colorPatternsHeader.bottom
         anchors.topMargin: -Style.borderWidth
         anchors.bottom: root.bottom
     }

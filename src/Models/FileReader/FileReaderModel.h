@@ -64,6 +64,8 @@ public:
     Q_INVOKABLE void copyToClipboardSelectedFilteredItems();
     Q_INVOKABLE void copyAllItems();
 
+    Q_INVOKABLE QColor getColor(const QString& filter);
+
     void setFilter(const QString& filter);
     const QString& filter() const;
 
@@ -77,6 +79,7 @@ signals:
     void modelReset();
     void filteredModelReset();
     void indexLineWidthChanged();
+    void recolorRenderedItems();
 
 private:
     void openFile();
@@ -116,6 +119,7 @@ private:
     std::atomic<bool> m_refilter = false;
     std::atomic<bool> m_recolor = false;
     std::atomic<bool> m_threadFinished = true;
+    std::atomic<Settings::ColoringStrategy> m_coloringStrategy;
     bool m_forceOneThreadLoop = false;
 
     int m_fileSize = 0;

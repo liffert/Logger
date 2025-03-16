@@ -7,7 +7,8 @@
 
 Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     QObject(parent),
-    m_fileWatcher(Utility::FileSystemWatcher::instance())
+    m_fileWatcher(Utility::FileSystemWatcher::instance()),
+    m_coloringStrategy(Settings::SettingsModel::instance().coloringStrategy())
 {
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_filePath) {
@@ -22,6 +23,10 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     connect(&Settings::SettingsModel::instance(), &Settings::SettingsModel::coloringPatternsChanged, this, &FileReaderModel::triggerRecoloring);
     connect(&Utility::Style::instance(), &Utility::Style::logLineFontChanged, this, [this]() {
         updateIndexLineWidth(true);
+    });
+    connect(&Settings::SettingsModel::instance(), &Settings::SettingsModel::coloringStrategyChanged, this, [this]() {
+        m_coloringStrategy.store(Settings::SettingsModel::instance().coloringStrategy(), std::memory_order::relaxed);
+        triggerRecoloring();
     });
     connect(this, &FileReaderModel::filterChanged, this, &FileReaderModel::triggerRefiltering);
     connect(this, &FileReaderModel::filePathChanged, this, &FileReaderModel::openFile);
@@ -176,7 +181,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
             if (!stream.atEnd()) {
                 const auto text = stream.readLine();
                 if (!text.isEmpty()) {
-                    const auto color = getColor(text, coloringPatterns);
+                    const auto color = m_coloringStrategy == Settings::ColoringStrategy::ON_READ ? getColor(text, coloringPatterns) : Utility::Style::instance().regularTextColor();
                     items.push_back({.text = text, .color = color});
                     if (isTextContainsFilter(text, currentFilter)) {
                         filteredItems.push_back({text, false, color, m_currentModelSize});
@@ -275,6 +280,11 @@ void Models::FileReader::FileReaderModel::copyAllItems()
     copyToClipBoard(modelSelection, m_model.getRawData());
 }
 
+QColor Models::FileReader::FileReaderModel::getColor(const QString& filter)
+{
+    return getColor(filter, Settings::SettingsModel::instance().coloringPatterns());
+}
+
 void Models::FileReader::FileReaderModel::setFilter(const QString& filter)
 {
     std::lock_guard lock(m_filterMutex);
@@ -318,17 +328,21 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
 
 void Models::FileReader::FileReaderModel::triggerRefiltering()
 {
-    if (!m_refilter) {
-        m_refilter = true;
+    if (!m_refilter.load(std::memory_order::relaxed)) {
+        m_refilter.store(true, std::memory_order::relaxed);
         m_allowReading.notify_one();
     }
 }
 
 void Models::FileReader::FileReaderModel::triggerRecoloring()
 {
-    if (!m_recolor) {
-        m_recolor = true;
-        m_allowReading.notify_one();
+    if (m_coloringStrategy.load(std::memory_order::relaxed) == Settings::ColoringStrategy::ON_READ) {
+        if (!m_recolor.load(std::memory_order::relaxed)) {
+            m_recolor.store(true, std::memory_order::relaxed);
+            m_allowReading.notify_one();
+        }
+    } else {
+        emit recolorRenderedItems();
     }
 }
 

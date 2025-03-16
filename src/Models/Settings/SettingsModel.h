@@ -11,6 +11,14 @@
 #include <QRegularExpression>
 
 namespace Models::Settings {
+QML_ELEMENT
+Q_NAMESPACE
+
+enum class ColoringStrategy {
+    ON_READ,
+    ON_RENDER
+};
+Q_ENUM_NS(ColoringStrategy)
 
 struct ColoringPattern {
     Q_GADGET
@@ -37,6 +45,7 @@ class SettingsModel : public QObject {
     QML_SINGLETON
 
     Q_PROPERTY(Utility::Models::ListModel<ColoringPattern> *coloringPatternsModel READ coloringPatternsModel CONSTANT)
+    Q_PROPERTY(ColoringStrategy coloringStrategy READ coloringStrategy WRITE setColoringStrategy NOTIFY coloringStrategyChanged)
 
 public:
     Q_DISABLE_COPY_MOVE(SettingsModel)
@@ -53,25 +62,31 @@ public:
     Q_INVOKABLE void openSettings();
     Q_INVOKABLE void closeSettings();
     Q_INVOKABLE void moveColoringPattern(int from, int to);
+    ColoringStrategy coloringStrategy() const;
+    void setColoringStrategy(ColoringStrategy value);
 
     const QList<ColoringPattern>& coloringPatterns();
     Utility::Models::ListModel<ColoringPattern>* coloringPatternsModel();
 
 signals:
     void coloringPatternsChanged();
+    void coloringStrategyChanged();
 
 private:
     struct PersistentStorageKeys {
         static const QString COLORING_PATTERNS_KEY;
         static const QString LOG_LINES_FONT_KEY;
+        static const QString COLORING_STRATEGY_KEY;
     };
 
     SettingsModel(QObject* parent = nullptr);
     ~SettingsModel();
+    void invokeColoringPatternsChanged(bool onClose);
 
     QSettings m_persistentStorage;
     Utility::Models::ListModel<ColoringPattern> m_coloringPatternsModel;
     QList<ColoringPattern> m_lastColoringPatterns;
+    ColoringStrategy m_coloringStrategy = ColoringStrategy::ON_READ;
 };
 
 inline QDataStream& operator<<(QDataStream& stream, const ColoringPattern& object)
