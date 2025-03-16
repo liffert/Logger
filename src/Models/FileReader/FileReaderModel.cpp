@@ -123,8 +123,8 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 m_recolor.store(false, std::memory_order::relaxed);
 
                 if(startFromTheBeginningIfNeeded(true, stream, file)) {
-                    items= {};
-                    filteredItems= {};
+                    items = {};
+                    filteredItems = {};
                 }
 
                 QMetaObject::invokeMethod(this, [this, &coloringPatterns]() {
@@ -138,7 +138,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 }
 
                 m_refilter.store(false, std::memory_order::relaxed);
-                filteredItems= {};
+                filteredItems = {};
                 currentFilter = createRegExp(filter());
                 QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
 
@@ -165,8 +165,8 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     }
 
                     if (startFromTheBeginningIfNeeded(false, stream, file)) {
-                        items= {};
-                        filteredItems= {};
+                        items = {};
+                        filteredItems = {};
                         break;
                     }
 
@@ -183,14 +183,14 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                             emit itemsAdded();
                         }, Qt::QueuedConnection);
                         startReadingPoint = currentReadingPoint;
-                        filteredItems= {};
+                        filteredItems = {};
                     }
                 }
             }
 
             if (startFromTheBeginningIfNeeded(false, stream, file)) {
-                items= {};
-                filteredItems= {};
+                items = {};
+                filteredItems = {};
                 //To make sure that when we are starting from the beginning new filter and coloring patterns will be used without overhead
                 //if such request were made.
                 continue;
@@ -221,8 +221,8 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                     updateIndexLineWidth(false);
                     emit itemsAdded();
                 }, Qt::QueuedConnection);
-                items= {};
-                filteredItems= {};
+                items = {};
+                filteredItems = {};
                 startReadingPoint = currentReadingPoint;
             } else if (timePassed >= threadSleepThreashold && stream.atEnd()) {
                 qInfo() << "Thread sleep waiting for file update " << filePath;
