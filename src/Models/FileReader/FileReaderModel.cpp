@@ -74,6 +74,8 @@ void Models::FileReader::FileReaderModel::openFile()
     });
 }
 
+QList<QByteArray> test;
+
 void Models::FileReader::FileReaderModel::processFile(const std::stop_token& stopToken, const QString& filePath)
 {
     using namespace std::chrono_literals;
@@ -90,16 +92,15 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
     QFile file;
     file.setFileName(filePath);
     file.open(QIODevice::ReadOnly);
-    QTextStream stream(&file);
 
     auto currentFilter = createRegExp(filter());
 
-    startFromTheBeginningIfNeeded(true, stream, file);
+    startFromTheBeginningIfNeeded(true, file);
 
     std::unique_lock lock(m_fileMutex);
     while (true) {
-        m_allowReading.wait(lock, [this, &stopToken, &file, &stream]() {
-            return (file.isOpen() && !stream.atEnd()) || m_refilter.load(std::memory_order::relaxed) || m_recolor.load(std::memory_order::relaxed) || m_forceOneThreadLoop || stopToken.stop_requested();
+        m_allowReading.wait(lock, [this, &stopToken, &file]() {
+            return (file.isOpen() && !file.atEnd()) || m_refilter.load(std::memory_order::relaxed) || m_recolor.load(std::memory_order::relaxed) || m_forceOneThreadLoop || stopToken.stop_requested();
         });
 
         if (m_forceOneThreadLoop) {
@@ -122,7 +123,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 }
                 m_recolor.store(false, std::memory_order::relaxed);
 
-                if(startFromTheBeginningIfNeeded(true, stream, file)) {
+                if(startFromTheBeginningIfNeeded(true, file)) {
                     items = {};
                     filteredItems = {};
                 }
@@ -164,7 +165,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                         break;
                     }
 
-                    if (startFromTheBeginningIfNeeded(false, stream, file)) {
+                    if (startFromTheBeginningIfNeeded(false, file)) {
                         items = {};
                         filteredItems = {};
                         break;
@@ -188,7 +189,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 }
             }
 
-            if (startFromTheBeginningIfNeeded(false, stream, file)) {
+            if (startFromTheBeginningIfNeeded(false, file)) {
                 items = {};
                 filteredItems = {};
                 //To make sure that when we are starting from the beginning new filter and coloring patterns will be used without overhead
@@ -196,8 +197,8 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 continue;
             };
 
-            if (!stream.atEnd()) {
-                const auto text = stream.readLine();
+            if (!file.atEnd()) {
+                const auto text = file.readLine();
                 if (!text.isEmpty()) {
                     const auto color = m_coloringStrategy == Settings::ColoringStrategy::ON_READ ? getColor(text, coloringPatterns) : Utility::Style::instance().regularTextColor();
                     items.push_back({.text = text, .color = color});
@@ -224,7 +225,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 items = {};
                 filteredItems = {};
                 startReadingPoint = currentReadingPoint;
-            } else if (timePassed >= threadSleepThreashold && stream.atEnd()) {
+            } else if (timePassed >= threadSleepThreashold && file.atEnd()) {
                 qInfo() << "Thread sleep waiting for file update " << filePath;
                 break;
             }
@@ -329,7 +330,7 @@ Utility::Models::SelectionListModel<Models::FileReader::FilteredLogLine>* Models
 }
 
 //TODO check performance impact
-bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force, QTextStream& stream, const QFile& file)
+bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool force, QFile& file)
 {
     const auto currentSize = file.size();
     const auto result = force || (currentSize < m_fileSize);
@@ -337,7 +338,7 @@ bool Models::FileReader::FileReaderModel::startFromTheBeginningIfNeeded(bool for
         qInfo() << __PRETTY_FUNCTION__ << currentSize << " " << m_fileSize;
         QMetaObject::invokeMethod(this, &FileReaderModel::resetModel, Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, &FileReaderModel::resetFilteredModel, Qt::QueuedConnection);
-        stream.seek(0);
+        file.seek(0);
         m_currentModelSize = 0;
     }
     m_fileSize = currentSize;

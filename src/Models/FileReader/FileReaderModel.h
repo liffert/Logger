@@ -22,6 +22,7 @@
 #include <QQmlEngine>
 #include <QFile>
 #include <QColor>
+#include <QByteArray>
 #include <condition_variable>
 #include <mutex>
 #include <shared_mutex>
@@ -36,12 +37,12 @@ namespace Models::FileReader {
 
 struct LogLine {
     Q_GADGET
-    Q_PROPERTY(QString text MEMBER text CONSTANT)
+    Q_PROPERTY(QByteArray text MEMBER text CONSTANT)
     Q_PROPERTY(bool selected MEMBER selected CONSTANT)
     Q_PROPERTY(QColor color MEMBER color CONSTANT)
 
 public:
-    QString text;
+    QByteArray text;
     bool selected = false;
     QColor color = Utility::Style::instance().regularTextColor();
 };
@@ -106,7 +107,7 @@ private:
     void resetModel();
     void resetFilteredModel();
     bool isTextContainsFilter(const QString& text, const QRegularExpression& filter);
-    bool startFromTheBeginningIfNeeded(bool force, QTextStream& stream, const QFile& file);
+    bool startFromTheBeginningIfNeeded(bool force, QFile& file);
     void triggerRefiltering();
     void triggerRecoloring();
     void updateIndexLineWidth(bool force);
