@@ -31,8 +31,8 @@ Models::FileReader::FileReaderModel::FileReaderModel(QObject* parent) :
     connect(&m_fileWatcher, &Utility::FileSystemWatcher::fileChanged, this, [this](const auto& path) {
         if (path == m_filePath) {
             if (m_fileMutex.try_lock()) {
-                m_fileMutex.unlock();
                 m_forceOneThreadLoop = true;
+                m_fileMutex.unlock();
                 m_allowReading.notify_one();
             }
         }
@@ -152,7 +152,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
                 //also provides safety mechanism in case if there for some reason will be a race condition and
                 //original data gets modified.
                 QList<LogLine> data;
-                QMetaObject::invokeMethod(this, [this, &data]() {
+                QMetaObject::invokeMethod(this, [this]() {
                     return m_model.getRawData();
                 }, Qt::BlockingQueuedConnection, Q_RETURN_ARG(decltype(data), data));
 
@@ -199,6 +199,7 @@ void Models::FileReader::FileReaderModel::processFile(const std::stop_token& sto
 
             if (!file.atEnd()) {
                 const auto text = file.readLine();
+                qInfo() << "MYLOG " << text << " " << text.isEmpty();
                 if (!text.isEmpty()) {
                     const auto color = m_coloringStrategy == Settings::ColoringStrategy::ON_READ ? getColor(text, coloringPatterns) : Utility::Style::instance().regularTextColor();
                     items.push_back({.text = text, .color = color});
@@ -306,9 +307,10 @@ QColor Models::FileReader::FileReaderModel::getColor(const QString& filter)
 
 void Models::FileReader::FileReaderModel::setFilter(const QString& filter)
 {
-    std::lock_guard lock(m_filterMutex);
+    std::unique_lock lock(m_filterMutex);
     if (m_filter != filter) {
         m_filter = filter;
+        lock.unlock();
         emit filterChanged();
     }
 }
